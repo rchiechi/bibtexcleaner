@@ -111,7 +111,7 @@ for bib in bib_database.entries:
             _p = clean[-1]['pages'].split('-')[0]
         except ValueError:
             _p = clean[-1]['pages']
-        _j, _v, _c = clean[-1]['journal'],clean[-1]['volume'],clean[-1]['id']
+        _j, _v, _c = clean[-1]['journal'],clean[-1]['volume'],clean[-1]['ID']
         dedupe.append( (_p, _v, _j, _c) )
 
     except KeyError:
@@ -122,11 +122,10 @@ print('\n%s # # # # %s' % (Style.BRIGHT,RS) )
 dupes = []
 # De-dupe check
 while dedupe:
-    e = dedupe.pop()
-    for c in dedupe:
-        if e[0:2] == c[0:2]:
-            #print('Possible dupe: %s/%s' % (e[3],c[3]) )
-            dupes.append( (e,c) )
+    _e = dedupe.pop()
+    for _c in dedupe:
+        if _e[0:2] == _c[0:2]:
+            dupes.append( (_e,_c) )
     
 
 # Replace entries in database with cleaned versions
@@ -143,7 +142,10 @@ if len(f):
 if len(dupes):
     print('\nPossible dupes:\n')
     for d in dupes:
-        print('# # #')
-        print(bib_database.entries_dict[d[0]])
-        prrint(' - - - ')
-        print(bib_database.entries_dict[d[1]])
+        print('\t\t# # #')
+        a = bib_database.entries_dict[d[0][3]]
+        b = bib_database.entries_dict[d[1][3]]
+        print('   %s%s%s\t%s' % (Style.BRIGHT,TEAL,a['ID'],b['ID']))
+        print('%sJournal: %s%s%s\t%s' %(YELLOW,Style.BRIGHT,WHITE,a['journal'],b['journal']))
+        print('%sVolume: %s%s%s\t\t%s' %(YELLOW,Style.BRIGHT,WHITE,a['volume'],b['volume']))
+        print('%sPages: %s%s%s\t%s' %(YELLOW,Style.BRIGHT,WHITE,a['pages'],b['pages']))
