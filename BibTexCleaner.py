@@ -94,6 +94,7 @@ f = []
 c= 0
 # List for clean entries
 clean = []
+dedupe = []
 # Loop over entries in bibtex database
 for bib in bib_database.entries:
     n += 1
@@ -106,10 +107,27 @@ for bib in bib_database.entries:
         if bib['journal'] in journals and bib['journal'] != journals[bib['journal']]:
             print('%s%s%s%s -> %s%s%s' % (Style.BRIGHT,TEAL,bib['journal'],WHITE,TEAL,journals[bib['journal']],RS))
             clean[-1]['journal'] = journals[bib['journal']]
+        try:
+            _p = clean[-1]['pages'].split('-')[0]
+        except ValueError:
+            _p = clean[-1]['pages']
+        _j, _v, _c = clean[-1]['journal'],clean[-1]['volume'],clean[-1]['id']
+        dedupe.append( (_p, _v, _j, _c) )
+
     except KeyError:
         if bib['ENTRYTYPE'] == 'journal':
             f.append(bib)
 print('\n%s # # # # %s' % (Style.BRIGHT,RS) )
+
+dupes = []
+# De-dupe check
+while dedupe:
+    e = dedupe.pop()
+    for c in dedupe:
+        if e[0:2] == c[0:2]:
+            #print('Possible dupe: %s/%s' % (e[3],c[3]) )
+            dupes.append( (e,c) )
+    
 
 # Replace entries in database with cleaned versions
 bib_database.entries = clean
@@ -117,7 +135,15 @@ writer = BibTexWriter()
 # Overwrite original BibTex file
 with open(BIBFILE, 'w') as bibfile:
         bibfile.write(writer.write(bib_database))
-print('%s%sParsed: %s\n%sCleaned: %s\n%sFailed:%s%s' % (Style.BRIGHT,GREEN,n,YELLOW,c,RED,len(f),RS))
+print('%s%sParsed: %s\n%sCleaned: %s\n%sDupes: %s\n%sFailed:%s%s' % (Style.BRIGHT,GREEN,n,YELLOW,c,TEAL,len(dupes),RED,len(f),RS))
 if len(f):
     print('\nEntries that produced errors:\n')
     print(f)
+
+if len(dupes):
+    print('\nPossible dupes:\n')
+    for d in dupes:
+        print('# # #')
+        print(bib_database.entries_dict[d[0]])
+        prrint(' - - - ')
+        print(bib_database.entries_dict[d[1]])
