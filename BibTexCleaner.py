@@ -117,5 +117,5 @@ with open(BIBFILE, 'w') as bibfile:
         bibfile.write(writer.write(db))
 print('%s%sParsed: %s\n%sCleaned: %s\n%sFailed:%s%s' % (Style.BRIGHT,GREEN,n,YELLOW,c,RED,len(f),RS))
 if len(f):
-    print('\n')
+    print('\nEntries that produced errors:\n')
     print(f)
