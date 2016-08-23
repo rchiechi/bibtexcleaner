@@ -81,7 +81,6 @@ print("%sRead %s journals." % (BLUE,len(journals.keys())) )
 
 
 # Setup BibTex Parser
-
 parser = BibTexParser()
 parser.customization = convert_to_unicode
 with open(BIBFILE) as fh:
@@ -95,6 +94,7 @@ f = []
 c= 0
 # List for clean entries
 clean = []
+# Loop over entries in bibtex database
 for bib in bib_database.entries:
     n += 1
     try:
@@ -110,11 +110,13 @@ for bib in bib_database.entries:
         if bib['ENTRYTYPE'] == 'journal':
             f.append(bib)
 print('\n%s # # # # %s' % (Style.BRIGHT,RS) )
-db = BibDatabase()
-db.entries = clean
+
+# Replace entries in database with cleaned versions
+bib_database.entries = clean
 writer = BibTexWriter()
+# Overwrite original BibTex file
 with open(BIBFILE, 'w') as bibfile:
-        bibfile.write(writer.write(db))
+        bibfile.write(writer.write(bib_database))
 print('%s%sParsed: %s\n%sCleaned: %s\n%sFailed:%s%s' % (Style.BRIGHT,GREEN,n,YELLOW,c,RED,len(f),RS))
 if len(f):
     print('\nEntries that produced errors:\n')
