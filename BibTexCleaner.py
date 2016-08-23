@@ -47,9 +47,11 @@ elif not os.path.exists(sys.argv[1]):
     print('%s%s does not exist!' % (RED,sys.argv[1]))
 
 BIBFILE=os.path.abspath(sys.argv[1])
+# Make a backup copy
 print('%sBacking %s up to %s' % (YELLOW,os.path.basename(BIBFILE),os.path.basename(BIBFILE)+'.bak'))
 shutil.copy(BIBFILE,BIBFILE+'.bak')
 
+# Use a cache file so we do not have to fetch the abbreviations on each run
 JCACHE=os.path.join(CACHEDIR,'journal_abbreviations_general.txt')
 jstr = ''
 
@@ -77,8 +79,6 @@ for l in jstr.split('\n'):
     journals[t.strip()] = a.strip()
 
 print("%sRead %s journals." % (BLUE,len(journals.keys())) )
-
-
 
 # Setup BibTex Parser
 parser = BibTexParser()
