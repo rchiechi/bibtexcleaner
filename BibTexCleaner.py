@@ -65,7 +65,7 @@ if not os.path.exists(JCACHE):
     except Exception as msg:
         print("%sError fetching journal abbreviations: %s" % (RED,str(msg)) )
 else:
-    print('%sReading journal abbreciations from cache.' % YELLOW)
+    print('%sReading journal abbreciations from %s.' % (YELLOW,JCACHE))
     with open(JCACHE,'rt') as fh:
         jstr = str(fh.read())
 
@@ -77,6 +77,8 @@ for l in jstr.split('\n'):
     except ValueError as msg:
         continue
     journals[t.strip()] = a.strip()
+    if len(t.split('(')) > 1:
+        journals[t.split('(')[0].strip()] = a.split('(')[0].strip()
 
 print("%sRead %s journals." % (BLUE,len(journals.keys())) )
 
