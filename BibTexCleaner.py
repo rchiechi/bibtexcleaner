@@ -135,9 +135,14 @@ class RecordHandler():
             __abbrev = True
         else:
             try:
-                _j = input('(%0.1f%%) Replace "%s%s%s" with "%s%s%s"? ' % (score*100,Style.BRIGHT+Fore.YELLOW,
+                _j = input('(%0.1f%%) Replace "%s%s%s" with "%s%s%s" or something else? ' % (score*100,Style.BRIGHT+Fore.YELLOW,
                     record['journal'],Style.RESET_ALL,Style.BRIGHT+Fore.GREEN,fuzzy,Style.RESET_ALL))
-                if _j.lower() in ('y','yes',''):
+                if _j.lower() in ('y','yes'):
+                    __abbrev = True
+                elif _j.lower() in ('n','no',''):
+                    pass
+                else:
+                    fuzzy = _j
                     __abbrev = True
             except KeyboardInterrupt:
                 print('')
