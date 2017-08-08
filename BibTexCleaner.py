@@ -154,14 +154,49 @@ for bib in bib_database.entries:
             f.append(bib)
 print('\n%s # # # # %s' % (Style.BRIGHT,Style.RESET_ALL) )
 
-dupes = []
-# De-dupe check
+dupes = {}
+## De-dupe check
 while dedupe:
     _e = dedupe.pop()
     for _c in dedupe:
         if _e[0:2] == _c[0:2]:
-            dupes.append( (_e,_c) )
+            if _e[-1] in dupes:
+                dupes[_e[-1]].append(_c)
+            else:
+                dupes[_e[-1]] = [_c]
+            #dupes.append( (_e,_c) )
+
+if dupes:
+    print('\nPossible dupes:\n')
+    for dupe in dupes:
+        d = dupes[dupe]
+        n = 1
+        dupelist = { str(n):bib_database.entries_dict[dupe]  }
+        #a = bib_database.entries_dict[dupe]
+        #b = bib_database.entries_dict[d[1][3]]
+        
+        b = []
+        for _d in d:
+            n += 1
+            dupelist[str(n)] = bib_database.entries_dict[_d[3]]
+            #b.append(bib_database.entries_dict[_d[3]])
+        print('\t\t# # #')
+        for n in dupelist:
+            print('%s%s%s):   %s%s' % (Style.BRIGHT,Fore.YELLOW,n,Fore.CYAN,dupelist[n]['ID']))
+            print('%sJournal: %s%s%s' %(Fore.YELLOW,Style.BRIGHT,Fore.WHITE,dupelist[n]['journal']))
+            print('%sVolume: %s%s%s' %(Fore.YELLOW,Style.BRIGHT,Fore.WHITE,dupelist[n]['volume']))
+            print('%sPages: %s%s%s' %(Fore.YELLOW,Style.BRIGHT,Fore.WHITE,dupelist[n]['pages']), end='\n\n')
     
+            #print('%s%s%s):   %s%s\t%s' % (Style.BRIGHT,Fore.YELLOW,n,Fore.CYAN,dupelist[n]['ID'],b['ID']))
+            #print('%sJournal: %s%s%s\t%s' %(Fore.YELLOW,Style.BRIGHT,Fore.WHITE,a['journal'],b['journal']))
+            #print('%sVolume: %s%s%s\t\t%s' %(Fore.YELLOW,Style.BRIGHT,Fore.WHITE,a['volume'],b['volume']))
+            #print('%sPages: %s%s%s\t%s' %(Fore.YELLOW,Style.BRIGHT,Fore.WHITE,a['pages'],b['pages']))
+        keep = input('Keep which one?  ')
+        if keep not in dupelist:
+            print('%sKeeping all.' % (Fore.GREEN) )
+        else:
+            print('%sKeeping %s%s.' % (Style.BRIGHT,Fore.GREEN,dupelist[keep]['ID']))
+            print("NOT REALLY!")
 
 # Replace entries in database with cleaned versions
 bib_database.entries = clean
@@ -175,13 +210,3 @@ if len(f):
     print('\nEntries that produced errors:\n')
     print(f)
 
-if len(dupes):
-    print('\nPossible dupes:\n')
-    for d in dupes:
-        print('\t\t# # #')
-        a = bib_database.entries_dict[d[0][3]]
-        b = bib_database.entries_dict[d[1][3]]
-        print('   %s%s%s\t%s' % (Style.BRIGHT,Fore.CYAN,a['ID'],b['ID']))
-        print('%sJournal: %s%s%s\t%s' %(Fore.YELLOW,Style.BRIGHT,Fore.WHITE,a['journal'],b['journal']))
-        print('%sVolume: %s%s%s\t\t%s' %(Fore.YELLOW,Style.BRIGHT,Fore.WHITE,a['volume'],b['volume']))
-        print('%sPages: %s%s%s\t%s' %(Fore.YELLOW,Style.BRIGHT,Fore.WHITE,a['pages'],b['pages']))
