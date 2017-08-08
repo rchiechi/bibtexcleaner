@@ -23,7 +23,8 @@ import bibtexparser
 from bibtexparser.bparser import BibTexParser
 from bibtexparser.bwriter import BibTexWriter
 from bibtexparser.bibdatabase import BibDatabase
-from bibtexparser.customization import homogeneize_latex_encoding,convert_to_unicode
+from bibtexparser.customization import page_double_hyphen
+from bibtexparser.latexenc import string_to_latex
 from colorama import init,Fore,Back,Style
 
 # Setup colors
@@ -105,6 +106,92 @@ def __parseabbreviations(jlines):
             journals[t.split('(')[0].strip()] = a.split('(')[0].strip()
     return journals
 
+class RecordHandler():
+    def __init__(self,journals):
+        self.journals = journals
+        self.clean = []
+        self.dedupe = []
+        self.errors = []
+        self.dupes = {}
+        self.n_cleaned = 0
+        self.n_parsed = 0
+
+    def handle_record(self,record):
+        try:
+            cleaned = titlecase(record['title'])
+            self.clean.append(record)
+            if cleaned != record['title']:
+                self.n_cleaned += 1
+                self.clean[-1]['title'] = cleaned
+            if record['journal'] in self.journals and record['journal'] != self.journals[record['journal']]:
+                print('%s%s%s%s -> %s%s%s' % (Style.BRIGHT,Fore.CYAN,record['journal'],
+                    Fore.WHITE,Fore.CYAN,self.journals[record['journal']],Style.RESET_ALL))
+                self.clean[-1]['journal'] = self.journals[record['journal']]
+            try:
+                _p = self.clean[-1]['pages'].split('-')[0]
+            except ValueError:
+                _p = self.clean[-1]['pages']
+            _j, _v, _c = self.clean[-1]['journal'],self.clean[-1]['volume'],self.clean[-1]['ID']
+            self.dedupe.append( (_p, _v, _j, _c) )
+        except KeyError:
+            if record['ENTRYTYPE'] == 'journal':
+                self.errors.append(record)
+        for r in record:
+            if r in ('title','ID','link','url','doi'):
+                continue
+            record[r] = string_to_latex(record[r])
+        record = page_double_hyphen(record)
+        return record
+
+    def dodupecheck(self):
+        while self.dedupe:
+            _e = self.dedupe.pop()
+            for _c in self.dedupe:
+                if _e[0:2] == _c[0:2]:
+                    if _e[-1] in self.dupes:
+                        self.dupes[_e[-1]].append(_c)
+                    else:
+                        self.dupes[_e[-1]] = [_c]
+
+        if self.dupes:
+            print('\nPossible dupes:\n')
+            for dupe in self.dupes:
+                d = self.dupes[dupe]
+                n = 1
+                dupelist = { str(n):bib_database.entries_dict[dupe]  }
+                for _d in d:
+                    n += 1
+                    dupelist[str(n)] = bib_database.entries_dict[_d[3]]
+                print('\t\t# # #')
+                for n in dupelist:
+                    print('%s%s%s):   %s%s' % (Style.BRIGHT,Fore.YELLOW,n,Fore.CYAN,dupelist[n]['ID']))
+                    print('%sJournal: %s%s%s' %(Fore.YELLOW,Style.BRIGHT,Fore.WHITE,dupelist[n]['journal']))
+                    print('%sVolume: %s%s%s' %(Fore.YELLOW,Style.BRIGHT,Fore.WHITE,dupelist[n]['volume']))
+                    print('%sPages: %s%s%s' %(Fore.YELLOW,Style.BRIGHT,Fore.WHITE,dupelist[n]['pages']), end='\n\n')
+                keep = input('Keep which one?  ')
+                if keep not in dupelist:
+                    print('%sKeeping all.' % (Fore.GREEN) )
+                else:
+                    print('%sKeeping %s%s.' % (Style.BRIGHT,Fore.GREEN,dupelist[keep]['ID']))
+                    for n in dupelist:
+                        if n == keep:
+                            continue
+                        for i in range(0,len(self.clean)):
+                            if self.clean[i]['ID'] == dupelist[n]['ID']:
+                                print('%s%sDeleting%s %s%s%s' % (Fore.YELLOW,Back.RED,
+                                    Style.RESET_ALL,Style.BRIGHT,Fore.RED,self.clean[i]['ID']))
+                                del(self.clean[i])
+                                break
+
+
+    def printstats(self):
+        print('%s%sParsed: %s\n%sCleaned: %s\n%sDupes: %s\n%sFailed:%s%s' % \
+                (Style.BRIGHT,Fore.GREEN,self.n_parsed,Fore.YELLOW,
+                    self.n_cleaned,Fore.CYAN,len(self.dupes),Fore.RED,len(self.errors),Style.RESET_ALL))
+        if len(self.errors):
+            print('\nEntries that produced errors:\n')
+            print(self.errors)
+
 # Parse journal abbreviations
 journals = getCache()
 # Parse custom abbreviations
@@ -112,101 +199,22 @@ journals.update(__parseabbreviations(opts.custom))
 # Update cache
 putCache(journals)
 
-
 print("%sRead %s journals." % (Fore.BLUE,len(journals.keys())) )
 
 # Setup BibTex Parser
 parser = BibTexParser()
-parser.customization = convert_to_unicode
-with open(BIBFILE) as fh:
-    bib_database = bibtexparser.load(fh, parser=parser)
+records = RecordHandler(journals)
+parser.customization = records.handle_record
 
 print('%s # # # # %s\n' % (Style.BRIGHT,Style.RESET_ALL) )
-
-# Counters
-n = 0
-f = []
-c= 0
-# List for clean entries
-clean = []
-dedupe = []
-# Loop over entries in bibtex database
-for bib in bib_database.entries:
-    n += 1
-    try:
-        cleaned = titlecase(bib['title'])
-        clean.append(bib)
-        if cleaned != bib['title']:
-            c += 1
-            clean[-1]['title'] = cleaned
-        if bib['journal'] in journals and bib['journal'] != journals[bib['journal']]:
-            print('%s%s%s%s -> %s%s%s' % (Style.BRIGHT,Fore.CYAN,bib['journal'],
-                Fore.WHITE,Fore.CYAN,journals[bib['journal']],Style.RESET_ALL))
-            clean[-1]['journal'] = journals[bib['journal']]
-        try:
-            _p = clean[-1]['pages'].split('-')[0]
-        except ValueError:
-            _p = clean[-1]['pages']
-        _j, _v, _c = clean[-1]['journal'],clean[-1]['volume'],clean[-1]['ID']
-        dedupe.append( (_p, _v, _j, _c) )
-    except KeyError:
-        if bib['ENTRYTYPE'] == 'journal':
-            f.append(bib)
+with open(BIBFILE) as fh:
+    bib_database = bibtexparser.load(fh, parser=parser)
 print('\n%s # # # # %s' % (Style.BRIGHT,Style.RESET_ALL) )
-
-dupes = {}
-## De-dupe check
-while dedupe:
-    _e = dedupe.pop()
-    for _c in dedupe:
-        if _e[0:2] == _c[0:2]:
-            if _e[-1] in dupes:
-                dupes[_e[-1]].append(_c)
-            else:
-                dupes[_e[-1]] = [_c]
-            #dupes.append( (_e,_c) )
-
-if dupes:
-    print('\nPossible dupes:\n')
-    for dupe in dupes:
-        d = dupes[dupe]
-        n = 1
-        dupelist = { str(n):bib_database.entries_dict[dupe]  }
-        #a = bib_database.entries_dict[dupe]
-        #b = bib_database.entries_dict[d[1][3]]
-        
-        b = []
-        for _d in d:
-            n += 1
-            dupelist[str(n)] = bib_database.entries_dict[_d[3]]
-            #b.append(bib_database.entries_dict[_d[3]])
-        print('\t\t# # #')
-        for n in dupelist:
-            print('%s%s%s):   %s%s' % (Style.BRIGHT,Fore.YELLOW,n,Fore.CYAN,dupelist[n]['ID']))
-            print('%sJournal: %s%s%s' %(Fore.YELLOW,Style.BRIGHT,Fore.WHITE,dupelist[n]['journal']))
-            print('%sVolume: %s%s%s' %(Fore.YELLOW,Style.BRIGHT,Fore.WHITE,dupelist[n]['volume']))
-            print('%sPages: %s%s%s' %(Fore.YELLOW,Style.BRIGHT,Fore.WHITE,dupelist[n]['pages']), end='\n\n')
-    
-            #print('%s%s%s):   %s%s\t%s' % (Style.BRIGHT,Fore.YELLOW,n,Fore.CYAN,dupelist[n]['ID'],b['ID']))
-            #print('%sJournal: %s%s%s\t%s' %(Fore.YELLOW,Style.BRIGHT,Fore.WHITE,a['journal'],b['journal']))
-            #print('%sVolume: %s%s%s\t\t%s' %(Fore.YELLOW,Style.BRIGHT,Fore.WHITE,a['volume'],b['volume']))
-            #print('%sPages: %s%s%s\t%s' %(Fore.YELLOW,Style.BRIGHT,Fore.WHITE,a['pages'],b['pages']))
-        keep = input('Keep which one?  ')
-        if keep not in dupelist:
-            print('%sKeeping all.' % (Fore.GREEN) )
-        else:
-            print('%sKeeping %s%s.' % (Style.BRIGHT,Fore.GREEN,dupelist[keep]['ID']))
-            print("NOT REALLY!")
-
+records.dodupecheck()
 # Replace entries in database with cleaned versions
-bib_database.entries = clean
+bib_database.entries = records.clean
 writer = BibTexWriter()
 # Overwrite original BibTex file
 with open(BIBFILE, 'w') as bibfile:
         bibfile.write(writer.write(bib_database))
-print('%s%sParsed: %s\n%sCleaned: %s\n%sDupes: %s\n%sFailed:%s%s' % \
-        (Style.BRIGHT,Fore.GREEN,n,Fore.YELLOW,c,Fore.CYAN,len(dupes),Fore.RED,len(f),Style.RESET_ALL))
-if len(f):
-    print('\nEntries that produced errors:\n')
-    print(f)
-
+records.printstats()
