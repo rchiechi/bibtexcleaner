@@ -119,6 +119,7 @@ class RecordHandler():
         self.n_parsed = 0
 
     def handle_record(self,record):
+        self.clean.append(record)
         for key in ('title','journal','pages','volume','ID'):
             if key not in record: # and record['ENTRYTYPE'] == 'journal':
                 self.errors.append(record)
@@ -126,7 +127,6 @@ class RecordHandler():
                 return record
         __abbrev = False
         cleaned = titlecase(record['title'])
-        self.clean.append(record)
         if cleaned != record['title']:
             self.n_cleaned += 1
             self.clean[-1]['title'] = cleaned
@@ -153,7 +153,6 @@ class RecordHandler():
             self.n_abbreviated += 1
             self.clean[-1]['journal'] = fuzzy
             record['journal'] = fuzzy
-
         try:
             _p = self.clean[-1]['pages'].split('-')[0]
         except ValueError:
@@ -220,7 +219,12 @@ class RecordHandler():
                     Fore.CYAN,len(self.dupes),Fore.RED,len(self.errors),Style.RESET_ALL))
         if len(self.errors):
             print('\nEntries that produced errors:\n')
-            print(self.errors)
+            #print(self.errors)
+            for err in errors:
+                for key in ('ENTRYTYPE','title','author'):
+                    if key not in err:
+                        continue
+                    print('%s: $s%s' (titlecase(key),Style.BRIGHT,err[key]))
 
 # Parse journal abbreviations
 journals = getCache()
