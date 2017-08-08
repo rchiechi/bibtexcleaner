@@ -110,6 +110,7 @@ def __parseabbreviations(jlines):
 class RecordHandler():
     def __init__(self,journals):
         self.journals = journals
+        self.recordkeys = ('ENTRYTYPE','title','journal','pages','volume','ID')
         self.clean = []
         self.dedupe = []
         self.errors = []
@@ -120,7 +121,7 @@ class RecordHandler():
 
     def handle_record(self,record):
         self.clean.append(record)
-        for key in ('title','journal','pages','volume','ID'):
+        for key in self.recordkeys:
             if key not in record: # and record['ENTRYTYPE'] == 'journal':
                 self.errors.append(record)
                 print('%sCannot parse %s' % (Fore.RED,record['ENTRYTYPE']))
@@ -220,11 +221,13 @@ class RecordHandler():
         if len(self.errors):
             print('\nEntries that produced errors:\n')
             #print(self.errors)
-            for err in errors:
-                for key in ('ENTRYTYPE','title','author'):
+            for err in self.errors:
+                print('* * * * * * * * * * * * * * * *')
+                for key in self.recordkeys:
                     if key not in err:
-                        continue
-                    print('%s: $s%s' (titlecase(key),Style.BRIGHT,err[key]))
+                        print('%s%s%s: -' % (Fore.RED,titlecase(key),Style.RESET_ALL))
+                    else:
+                        print('%s: %s%s' % (titlecase(key),Style.BRIGHT,err[key]))
 
 # Parse journal abbreviations
 journals = getCache()
