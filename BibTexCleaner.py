@@ -41,7 +41,8 @@ parser.add_argument('infile', type=str, nargs=1, default=[],
 parser.add_argument('-r','--refresh', action='store_true', default=False,
     help="Refresh cached journal list.")
 parser.add_argument('-d','--database', type=str, 
-    default='https://raw.githubusercontent.com/JabRef/reference-abbreviations/master/journals/journal_abbreviations_general.txt',
+    default = 'https://raw.githubusercontent.com/rchiechi/BibTexCleaner/master/journal_abbreviations_general.txt',
+    #default='https://raw.githubusercontent.com/JabRef/reference-abbreviations/master/journals/journal_abbreviations_general.txt',
     help="Databse of journal abbreviations.")
 parser.add_argument('-c','--custom', action='append', default=[],
         help="Cust abbreviations separated by equal signs, e.g., -c 'Journal of Kittens=J. Kitt.'\
@@ -74,7 +75,7 @@ def getCache():
     if not os.path.exists(JCACHE):
         print('%sFetching list of common journal abbreviations.' % Fore.YELLOW)
         try:
-            r = requests.get('https://raw.githubusercontent.com/JabRef/reference-abbreviations/master/journals/journal_abbreviations_general.txt')
+            r = requests.get(opts.database)
             journals = __parseabbreviations(r.text.split('\n'))
         except Exception as msg:
             print("%sError fetching journal abbreviations: %s" % (Fore.RED,str(msg)) )
