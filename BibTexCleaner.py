@@ -110,7 +110,7 @@ def __parseabbreviations(jlines):
 class RecordHandler():
     def __init__(self,journals):
         self.journals = journals
-        self.recordkeys = ('ENTRYTYPE','title','journal','pages','volume','ID')
+        self.recordkeys = ('ENTRYTYPE','ID','title','journal','pages','volume')
         self.clean = []
         self.dedupe = []
         self.errors = []
