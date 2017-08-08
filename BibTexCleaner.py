@@ -10,13 +10,14 @@ except ImportError:
 prog = os.path.basename(sys.argv[0]).replace('.py','')
 # Need to make this check because ase does not check for dependencies like matplotlib at import
 installed = [package.project_name for package in pip.get_installed_distributions()]
-required = ['colorama','bibtexparser','titlecase','requests']
+required = ['colorama','bibtexparser','titlecase','requests','python-Levenshtein']
 for pkg in required:
     if pkg not in installed:
         print('You need to install %s to use %s.' % (pkg,prog))
         print('e.g., sudo -H pip3 install --upgrade %s' % pkg)
         sys.exit(1)
 
+import Levenshtein
 import requests
 from titlecase import titlecase
 import bibtexparser
@@ -75,7 +76,6 @@ def getCache():
         try:
             r = requests.get('https://raw.githubusercontent.com/JabRef/reference-abbreviations/master/journals/journal_abbreviations_general.txt')
             journals = __parseabbreviations(r.text.split('\n'))
-            #journals = __parseabbreviations(str(r.content,encoding='utf-8'))
         except Exception as msg:
             print("%sError fetching journal abbreviations: %s" % (Fore.RED,str(msg)) )
     else:
@@ -113,35 +113,52 @@ class RecordHandler():
         self.dedupe = []
         self.errors = []
         self.dupes = {}
+        self.n_abbreviated = 0
         self.n_cleaned = 0
         self.n_parsed = 0
 
     def handle_record(self,record):
-        try:
-            cleaned = titlecase(record['title'])
-            self.clean.append(record)
-            if cleaned != record['title']:
-                self.n_cleaned += 1
-                self.clean[-1]['title'] = cleaned
-            if record['journal'] in self.journals and record['journal'] != self.journals[record['journal']]:
-                print('%s%s%s%s -> %s%s%s' % (Style.BRIGHT,Fore.CYAN,record['journal'],
-                    Fore.WHITE,Fore.CYAN,self.journals[record['journal']],Style.RESET_ALL))
-                self.clean[-1]['journal'] = self.journals[record['journal']]
-            try:
-                _p = self.clean[-1]['pages'].split('-')[0]
-            except ValueError:
-                _p = self.clean[-1]['pages']
-            _j, _v, _c = self.clean[-1]['journal'],self.clean[-1]['volume'],self.clean[-1]['ID']
-            self.dedupe.append( (_p, _v, _j, _c) )
-        except KeyError:
-            if record['ENTRYTYPE'] == 'journal':
+        for key in ('title','journal','pages','volume','ID'):
+            if key not in record: # and record['ENTRYTYPE'] == 'journal':
                 self.errors.append(record)
-        for r in record:
-            if r in ('title','ID','link','url','doi'):
-                continue
-            record[r] = string_to_latex(record[r])
+        cleaned = titlecase(record['title'])
+        self.clean.append(record)
+        if cleaned != record['title']:
+            self.n_cleaned += 1
+            self.clean[-1]['title'] = cleaned
+        if record['journal'] in self.journals and record['journal'] != self.journals[record['journal']]:
+            print('%s%s%s%s -> %s%s%s' % (Style.BRIGHT,Fore.CYAN,record['journal'],
+                Fore.WHITE,Fore.CYAN,self.journals[record['journal']],Style.RESET_ALL))
+            self.n_abbreviated += 1
+            self.clean[-1]['journal'] = self.journals[record['journal']]
+        else:
+            print("%sNo abbreviation in %s for: %s" % (Fore.YELLOW,record['ID'],record['journal']) )
+            fuzzy = self.__fuzzymatch(record['journal'])
+            try:
+                _j = input('Replace with "%s%s%s"? ' % (Style.BRIGHT,fuzzy,Style.RESET_ALL))
+                if _j.lower() in ('y','yes'):
+                    record['journal'] = fuzzy
+            except KeyboardInterrupt:
+                sys.exit()
+        try:
+            _p = self.clean[-1]['pages'].split('-')[0]
+        except ValueError:
+            _p = self.clean[-1]['pages']
+        _j, _v, _c = self.clean[-1]['journal'],self.clean[-1]['volume'],self.clean[-1]['ID']
+        self.dedupe.append( (_p, _v, _j, _c) )
+        record['journal'] = string_to_latex(record['journal'])
         record = page_double_hyphen(record)
+        self.n_parsed += 1
         return record
+
+    def __fuzzymatch(self,s):
+        n = ('',0)
+        for key in self.journals:
+            _a = Levenshtein.ratio(s,key)
+            _b = Levenshtein.ratio(s,self.journals[key])
+            if _a > n[1]: n = [self.journals[key],_a]
+            if _b > n[1]: n = [self.journals[key],_b]
+        return n[0]
 
     def dodupecheck(self):
         while self.dedupe:
@@ -182,12 +199,11 @@ class RecordHandler():
                                     Style.RESET_ALL,Style.BRIGHT,Fore.RED,self.clean[i]['ID']))
                                 del(self.clean[i])
                                 break
-
-
     def printstats(self):
-        print('%s%sParsed: %s\n%sCleaned: %s\n%sDupes: %s\n%sFailed:%s%s' % \
+        print('%s%sParsed: %s\n%sCleaned: %s\n%sAbbreviated: %s\n%sDupes: %s\n%sFailed:%s%s' % \
                 (Style.BRIGHT,Fore.GREEN,self.n_parsed,Fore.YELLOW,
-                    self.n_cleaned,Fore.CYAN,len(self.dupes),Fore.RED,len(self.errors),Style.RESET_ALL))
+                    self.n_cleaned,Fore.MAGENTA,self.n_abbreviated,
+                    Fore.CYAN,len(self.dupes),Fore.RED,len(self.errors),Style.RESET_ALL))
         if len(self.errors):
             print('\nEntries that produced errors:\n')
             print(self.errors)
