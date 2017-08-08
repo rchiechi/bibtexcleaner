@@ -133,12 +133,9 @@ class RecordHandler():
         fuzzy,score = self.__fuzzymatch(record['journal'])
         if score > 0.95:
             __abbrev = True
-        #if record['journal'] in self.journals and record['journal'] != self.journals[record['journal']]:
-            #print('%s%s%s%s -> %s%s%s' % (Style.BRIGHT,Fore.CYAN,record['journal'],
-            #    Fore.WHITE,Fore.CYAN,fuzzy,Style.RESET_ALL))
         else:
             try:
-                _j = input('(%0.1f%%) Replace "%s%s%s" with "%s%s%s"? ' % (score,Style.BRIGHT+Fore.YELLOW,
+                _j = input('(%0.1f%%) Replace "%s%s%s" with "%s%s%s"? ' % (score*100,Style.BRIGHT+Fore.YELLOW,
                     record['journal'],Style.RESET_ALL,Style.BRIGHT+Fore.GREEN,fuzzy,Style.RESET_ALL))
                 if _j.lower() in ('y','yes',''):
                     __abbrev = True
