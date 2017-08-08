@@ -122,25 +122,36 @@ class RecordHandler():
         for key in ('title','journal','pages','volume','ID'):
             if key not in record: # and record['ENTRYTYPE'] == 'journal':
                 self.errors.append(record)
+                print('%sCannot parse %s' % (Fore.RED,record['ENTRYTYPE']))
+                return record
+        __abbrev = False
         cleaned = titlecase(record['title'])
         self.clean.append(record)
         if cleaned != record['title']:
             self.n_cleaned += 1
             self.clean[-1]['title'] = cleaned
-        if record['journal'] in self.journals and record['journal'] != self.journals[record['journal']]:
-            print('%s%s%s%s -> %s%s%s' % (Style.BRIGHT,Fore.CYAN,record['journal'],
-                Fore.WHITE,Fore.CYAN,self.journals[record['journal']],Style.RESET_ALL))
-            self.n_abbreviated += 1
-            self.clean[-1]['journal'] = self.journals[record['journal']]
+        fuzzy,score = self.__fuzzymatch(record['journal'])
+        if score > 0.95:
+            __abbrev = True
+        #if record['journal'] in self.journals and record['journal'] != self.journals[record['journal']]:
+            #print('%s%s%s%s -> %s%s%s' % (Style.BRIGHT,Fore.CYAN,record['journal'],
+            #    Fore.WHITE,Fore.CYAN,fuzzy,Style.RESET_ALL))
         else:
-            print("%sNo abbreviation in %s for: %s" % (Fore.YELLOW,record['ID'],record['journal']) )
-            fuzzy = self.__fuzzymatch(record['journal'])
             try:
-                _j = input('Replace with "%s%s%s"? ' % (Style.BRIGHT,fuzzy,Style.RESET_ALL))
-                if _j.lower() in ('y','yes'):
-                    record['journal'] = fuzzy
+                _j = input('(%0.1f%%) Replace "%s%s%s" with "%s%s%s"? ' % (score,Style.BRIGHT+Fore.YELLOW,
+                    record['journal'],Style.RESET_ALL,Style.BRIGHT+Fore.GREEN,fuzzy,Style.RESET_ALL))
+                if _j.lower() in ('y','yes',''):
+                    __abbrev = True
             except KeyboardInterrupt:
+                print('')
                 sys.exit()
+        if __abbrev:
+            print('%s%s%s%s -> %s%s%s' % (Style.BRIGHT,Fore.CYAN,record['journal'],
+                Fore.WHITE,Fore.CYAN,fuzzy,Style.RESET_ALL))
+            self.n_abbreviated += 1
+            self.clean[-1]['journal'] = fuzzy
+            record['journal'] = fuzzy
+
         try:
             _p = self.clean[-1]['pages'].split('-')[0]
         except ValueError:
@@ -159,7 +170,7 @@ class RecordHandler():
             _b = Levenshtein.ratio(s,self.journals[key])
             if _a > n[1]: n = [self.journals[key],_a]
             if _b > n[1]: n = [self.journals[key],_b]
-        return n[0]
+        return n
 
     def dodupecheck(self):
         while self.dedupe:

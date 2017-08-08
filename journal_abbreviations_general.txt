@@ -4530,3 +4530,5 @@ Zürcher Wald = Zür.ld
 Ökologie und Landbau = Ökol. Landbau
 Österreichische botanische Zeitschrift = Österr. bot. Z.
 Österreichische Forstzeitung = Österr. Forstztg.
+Nature Communications = Nat. Commun.
+ACS Applied Materials & Interfaces = ACS Appl. Mater. Interfaces
