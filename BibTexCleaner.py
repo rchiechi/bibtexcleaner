@@ -1,14 +1,13 @@
-#!/usr/local/bin/python3
+#!/usr/bin/env python3
 import sys,os,tempfile,shutil,argparse,pickle
 
 try:
     import pip
 except ImportError:
-    print('You don\'t have pip installed. You will need pip to istall other dependencies.')
+    print('You don\'t have pip installed. You will need pip to install other dependencies.')
     sys.exit(1)
 
 prog = os.path.basename(sys.argv[0]).replace('.py','')
-# Need to make this check because ase does not check for dependencies like matplotlib at import
 installed = [package.project_name for package in pip.get_installed_distributions()]
 required = ['colorama','bibtexparser','titlecase','requests','python-Levenshtein']
 for pkg in required:
@@ -67,16 +66,29 @@ shutil.copy2(BIBFILE,BIBFILE+'.bak')
 # Use a cache file so we do not have to fetch the abbreviations on each run
 JCACHE=os.path.join(CACHEDIR,'journal_abbreviations.cache')
 
+# Remove stale cache if refresh is requested
 if os.path.exists(JCACHE) and opts.refresh:
     os.remove(JCACHE)
 
 def getCache():
+    '''
+    Return a dictionary of journals either from cache or online 
+    '''
     journals = {}
     if not os.path.exists(JCACHE):
         print('%sFetching list of common journal abbreviations.' % Fore.YELLOW)
         try:
             r = requests.get(opts.database)
-            journals = __parseabbreviations(r.text.split('\n'))
+            for l in r.text.split('\n'):
+                try:
+                    t,a = l.split('=')
+                except ValueError:
+                    continue
+                journals[t.strip()] = a.strip()
+                # Some journals/books have parentheticals e.g., (New York, New York)
+                # Save the abbreviation both with and without it 
+                if '(' in t and '(' in a:
+                    journals[t.split('(')[0].strip()] = a.split('(')[0].strip()
         except Exception as msg:
             print("%sError fetching journal abbreviations: %s" % (Fore.RED,str(msg)) )
     else:
@@ -85,7 +97,7 @@ def getCache():
             print('%sRead journal abbreciations from %s.' % (Fore.YELLOW,JCACHE))
         except:
             print('%sError loading cache from %s.' % (Fore.RED,JCACHE))
-            sys.exit()
+            sys.exit(1)
     return journals
 
 def putCache(journals):
@@ -95,17 +107,6 @@ def putCache(journals):
     except:
         print('%sError saving cache to %s' % (Fore.RED,JCACHE))
 
-def __parseabbreviations(jlines):
-    journals = {}
-    for l in jlines:
-        try:
-            t,a = l.split('=')
-        except ValueError as msg:
-            continue
-        journals[t.strip()] = a.strip()
-        if len(t.split('(')) > 1:
-            journals[t.split('(')[0].strip()] = a.split('(')[0].strip()
-    return journals
 
 class RecordHandler():
     def __init__(self,journals):
@@ -132,7 +133,7 @@ class RecordHandler():
             self.n_cleaned += 1
             self.clean[-1]['title'] = cleaned
         fuzzy,score = self.__fuzzymatch(record['journal'])
-        if score > 0.95:
+        if score >= 0.95:
             __abbrev = True
         else:
             try:
