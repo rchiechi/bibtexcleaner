@@ -1,32 +1,38 @@
 #!/usr/local/bin/python3
 import sys,os,tempfile,shutil,argparse,pickle
 
-try:
-    import pip
-except ImportError:
-    print('You don\'t have pip installed. You will need pip to istall other dependencies.')
-    sys.exit(1)
+#try:
+#    import pip
+#except ImportError:
+#    print('You don\'t have pip installed. You will need pip to istall other dependencies.')
+#    sys.exit(1)
 
 prog = os.path.basename(sys.argv[0]).replace('.py','')
 # Need to make this check because ase does not check for dependencies like matplotlib at import
-installed = [package.project_name for package in pip.get_installed_distributions()]
-required = ['colorama','bibtexparser','titlecase','requests','python-Levenshtein']
-for pkg in required:
-    if pkg not in installed:
-        print('You need to install %s to use %s.' % (pkg,prog))
-        print('e.g., sudo -H pip3 install --upgrade %s' % pkg)
-        sys.exit(1)
+#installed = [package.project_name for package in pip.get_installed_distributions()]
+#required = ['colorama','bibtexparser','titlecase','requests','python-Levenshtein']
+#for pkg in required:
+#    if pkg not in installed:
+#        print('You need to install %s to use %s.' % (pkg,prog))
+#        print('e.g., sudo -H pip3 install --upgrade %s' % pkg)
+#        sys.exit(1)
 
-import Levenshtein
-import requests
-from titlecase import titlecase
-import bibtexparser
-from bibtexparser.bparser import BibTexParser
-from bibtexparser.bwriter import BibTexWriter
-from bibtexparser.bibdatabase import BibDatabase
-from bibtexparser.customization import page_double_hyphen
-from bibtexparser.latexenc import string_to_latex
-from colorama import init,Fore,Back,Style
+try:
+
+    import Levenshtein
+    import requests
+    from titlecase import titlecase
+    import bibtexparser
+    from bibtexparser.bparser import BibTexParser
+    from bibtexparser.bwriter import BibTexWriter
+    from bibtexparser.bibdatabase import BibDatabase
+    from bibtexparser.customization import page_double_hyphen
+    from bibtexparser.latexenc import string_to_latex
+    from colorama import init,Fore,Back,Style
+
+except ImportError as msg:
+    print("Error importing package: %s" % str(msg))
+    sys.exit(1)
 
 # Setup colors
 init(autoreset=True)
