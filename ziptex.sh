@@ -55,8 +55,7 @@ fi
 ZIP=0
 BZ=0
 
-while getopts ":zjo:" options; do
-
+while getopts ":o:zj" options; do
     case "${options}" in
         z) 
             ZIP=1
@@ -75,8 +74,15 @@ while getopts ":zjo:" options; do
             exit_abnormal
             ;;
         esac
-        shift
 done
+
+# Convert OUTDIR to absolute path
+OUTDIR=$(cd "$OUTDIR"; pwd)
+
+if [[ ! -d "$OUTDIR" ]]; then
+    echo "${RED}${OUTDIR} is not a directory!"
+    exit_abnormal
+fi
 
 if [[ $ZIP == 0 && $BZ == 0 ]]; then
     echo "${RED}You must pick at least one archive option, -z / -j.${RS}"
@@ -84,31 +90,32 @@ if [[ $ZIP == 0 && $BZ == 0 ]]; then
 fi
 
 
-if [ ! -d "${TMPDIR}" ] ; then mkdir "${TMPDIR}"; fi
+if [[ ! -d "${TMPDIR}" ]] ; then mkdir "${TMPDIR}"; fi
 if [ $? != 0 ] ; then
 	echo "Error creating ${TMPDIR} exiting."
 	exit 1
 fi
 
-#BASENAME=${1%.tex}
-
 SAVEIFS=$IFS
 IFS=$(echo -en "\n\b")
 for TEX in $@
 do
-    if [[ "${TEX}" == "${OUTDIR}" ]]; then
+    if [[ -d "${TEX}" ]]; then
+        if [[ "$OUTDIR" != $(cd "$TEX"; pwd) ]]; then
+            echo "${YELLOW}Skipping directory $TEX"
+        fi
         continue
     fi
 	echo ${TEX} | grep -q \.tex
 	if [[ "$?" == 0 ]] ; then
 		echo "Finding deps for ${TEX}"
-		finddeps "${TEX}" | xargs -n 1 -I % rsync --relative % "${TMPDIR}"
+		finddeps "${TEX}" | xargs -n 1 -I % rsync -q --relative % "${TMPDIR}"
 	    BIB=$(grep '\\bibliography' manuscript.tex | cut -d '{' -f 2 | sed 's+}+.bib+')
         if [[ -f "$BIB" ]] ; then
             echo "Adding $BIB"
             cp "${BIB}" "${TMPDIR}"
         fi
-    elif [[ -f "${TEX}" || -d "${TEX}" ]]; then
+    elif [[ -f "${TEX}" ]]; then
 		cp "${TEX}" "${TMPDIR}"
 	fi
 done
