@@ -67,7 +67,7 @@ while getopts ":o:zj" options; do
             OUTDIR="${OPTARG}"
             ;;
         :)
-            echo "${RED}Error: -${OPTARG} requires an argument."
+            echo "${RED}Error: -${OPTARG} requires an argument.${RS}"
             exit_abnormal
             ;;
         *)
@@ -80,7 +80,7 @@ done
 OUTDIR=$(cd "$OUTDIR"; pwd)
 
 if [[ ! -d "$OUTDIR" ]]; then
-    echo "${RED}${OUTDIR} is not a directory!"
+    echo "${RED}${OUTDIR} is not a directory!${RS}"
     exit_abnormal
 fi
 
@@ -102,7 +102,7 @@ for TEX in $@
 do
     if [[ -d "${TEX}" ]]; then
         if [[ "$OUTDIR" != $(cd "$TEX"; pwd) ]]; then
-            echo "${YELLOW}Skipping directory $TEX"
+            echo "${YELLOW}Skipping directory ${TEX}${RS}"
         fi
         continue
     fi
@@ -112,7 +112,7 @@ do
 		finddeps "${TEX}" | xargs -n 1 -I % rsync -q --relative % "${TMPDIR}"
 	    BIB=$(grep '\\bibliography' manuscript.tex | cut -d '{' -f 2 | sed 's+}+.bib+')
         if [[ -f "$BIB" ]] ; then
-            echo "Adding $BIB"
+            echo "${POWDER_BLUE}Adding ${BIB}${RS}"
             cp "${BIB}" "${TMPDIR}"
         fi
     elif [[ -f "${TEX}" ]]; then
