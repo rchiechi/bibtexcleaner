@@ -41,7 +41,7 @@ exit_abnormal() {
 }
 
 finddeps () {
-	pdflatex -draft -record -halt-on-error "$1" >/dev/null 
+	pdflatex -draft -record -halt-on-error "$1" >/dev/null
 	awk '!x[$0]++' ${1%.tex}.fls | sed '/^INPUT \/.*/d' | sed '/^OUTPUT .*/d' | sed '/^PWD .*/d' | sed 's/^INPUT //g'
 }
 
@@ -57,7 +57,7 @@ BZ=0
 
 while getopts ":o:zj" options; do
     case "${options}" in
-        z) 
+        z)
             ZIP=1
             ;;
         j)
@@ -129,11 +129,11 @@ then
 	rm *.out *.bak 2>/dev/null
     if [[ $ZIP == 1 ]]; then
         echo "${POWDER_BLUE}Compressing files to ${OUTDIR}${BASENAME}.zip${RS}"
-        zip -r9 "${OUTDIR}${BASENAME}.zip" *
+        zip -r9 "${OUTDIR}/${BASENAME}.zip" *
     fi
     if [[ $BZ == 1 ]]; then
         echo "${POWDER_BLUE}Compressing files to ${OUTDIR}${BASENAME}.tar.bz2${RS}"
-        tar -cjvf "${OUTDIR}${BASENAME}.tar.bz2" *
+        tar -cjvf "${OUTDIR}/${BASENAME}.tar.bz2" *
     fi
     cd ..
 	rm -fr "${TMPDIR}"
