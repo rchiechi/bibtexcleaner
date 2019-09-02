@@ -128,12 +128,12 @@ then
 	printf '%s\0' *.tex | xargs -0 -n 1 sed -i.bak '/^%.*$/d'
 	rm *.out *.bak 2>/dev/null
     if [[ $ZIP == 1 ]]; then
-        echo "${POWDER_BLUE}Compressing files to ${OUTDIR}${BASENAME}.zip${RS}"
-        zip -r9 "${OUTDIR}${BASENAME}.zip" *
+        echo "${POWDER_BLUE}Compressing files to ${OUTDIR}/${BASENAME}.zip${RS}"
+        zip -r9 "${OUTDIR}/${BASENAME}.zip" *
     fi
     if [[ $BZ == 1 ]]; then
-        echo "${POWDER_BLUE}Compressing files to ${OUTDIR}${BASENAME}.tar.bz2${RS}"
-        tar -cjvf "${OUTDIR}${BASENAME}.tar.bz2" *
+        echo "${POWDER_BLUE}Compressing files to ${OUTDIR}/${BASENAME}.tar.bz2${RS}"
+        tar -cjvf "${OUTDIR}/${BASENAME}.tar.bz2" *
     fi
     cd ..
 	rm -fr "${TMPDIR}"
