@@ -41,7 +41,7 @@ exit_abnormal() {
 }
 
 finddeps () {
-	pdflatex -draft -record -halt-on-error "$1" >/dev/null 
+	pdflatex -draft -record -halt-on-error "$1" >/dev/null
 	awk '!x[$0]++' ${1%.tex}.fls | sed '/^INPUT \/.*/d' | sed '/^OUTPUT .*/d' | sed '/^PWD .*/d' | sed 's/^INPUT //g'
 }
 
@@ -57,7 +57,7 @@ BZ=0
 
 while getopts ":o:zj" options; do
     case "${options}" in
-        z) 
+        z)
             ZIP=1
             ;;
         j)
