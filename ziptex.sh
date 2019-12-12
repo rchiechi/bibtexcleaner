@@ -34,7 +34,7 @@ RS=$(tput sgr0 2>/dev/null)
 #
 
 usage() {
-	echo "${LIME_YELLOW}Usage: $0 [ -z ] [ -j ] [ -o OUTDIR ] .tex <.tex> ... ${RS}"
+	echo "${LIME_YELLOW}Usage: $0 [ -f] [ -z ] [ -j ] [ -o OUTDIR ] .tex <.tex> ... ${RS}"
 }
 
 exit_abnormal() {
@@ -118,8 +118,9 @@ fi
 
 ZIP=0
 BZ=0
+FORCE=0
 
-while getopts ":o:zj" options; do
+while getopts ":o:zjf" options; do
     case "${options}" in
         z)
             ZIP=1
@@ -127,6 +128,9 @@ while getopts ":o:zj" options; do
         j)
             BZ=1
             ;;
+				f)
+						FORCE=1
+						;;
         o)
             OUTDIR="${OPTARG}"
             ;;
@@ -198,6 +202,7 @@ then
 	flattendirs # Get rid of graphicspath and flatten directory structure
 	checktex # Make sure the cleaned tex files are OK
 	texok=$?
+	[[ $FORCE == 1 ]] && texok=0
   # Cleanup
 	while read todel; do
 		rm "$todel"
