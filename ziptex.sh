@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# If you use a custom class file, put it here
+CUSTOM_CLASS="${HOME}/Documents/work/Manuscripts/BibLaTex-Template/rcclab.cls"
 
 #SET OUTPUT AND TMP DIRECTORY#####
 OUTDIR="${HOME}/Desktop/"
@@ -40,12 +42,62 @@ exit_abnormal() {
     exit 1
 }
 
-finddeps () {
+finddeps() {
 	pdflatex -draft -record -halt-on-error "$1" >/dev/null
 	awk '!x[$0]++' ${1%.tex}.fls | sed '/^INPUT \/.*/d' | sed '/^OUTPUT .*/d' | sed '/^PWD .*/d' | sed 's/^INPUT //g'
 }
 
+checktex() { # This function should only be called from $TMPDIR
+	for TEX in ${TEXFILES[@]}; do
+		pdflatex -draft -halt-on-error "${TEX}" >/dev/null
+		if [[ $? == 0 ]]; then
+			echo "${GREEN}${TEX} is OK.${RS}"
+		else
+			echo "${RED}${TEX} is NOT OK.${RS}"
+			exit 1
+		fi
+  done
+}
 
+catclass() { # This function should only be called from $TMPDIR
+	# Check for CUSTOM_CLASS
+	[[ -z ${CUSTOM_CLASS} ]] && return
+  # If a copy of the cls file exists locally, use that one
+	[[ -f $(basename ${CUSTOM_CLASS}) ]] && classfile=$(basename ${CUSTOM_CLASS}) || classfile=${CUSTOM_CLASS}
+	for TEX in ${TEXFILES[@]}; do
+		grep '\\documentclass' "${TEX}" | grep -q $(basename ${classfile} | sed 's/\.cls//g')
+		if [[ $? == 0 ]]; then
+			echo "${LIME_YELLOW}Concatenating $(basename ${classfile}) into ${TEX} for portability.${RS}"
+			mv "${TEX}" "${TEX}.orig"
+			printf "\\\begin{filecontents}{$(basename ${classfile})}\n" > ${TEX}
+			cat "${classfile}" >> ${TEX}
+			printf "\\\end{filecontents}\n" >> ${TEX}
+			cat "${TEX}.orig" >> ${TEX}
+			rm "${TEX}.orig"
+			[[ "$classfile" != "${CUSTOM_CLASS}" ]] && echo "$classfile" >> .todel
+		fi
+	done
+}
+
+cataux() { # This function should only be called from $TMPDIR
+	for TEX in ${TEXFILES[@]}; do
+		ls *.aux | while read aux; do
+			grep -q "${aux%.*}" ${TEX}
+			if [[ $? == 0 ]]; then
+				echo "${LIME_YELLOW}Concatenating $(basename ${aux}) into ${TEX} files for portability.${RS}"
+				mv "${TEX}" "${TEX}.orig"
+				printf "\\\begin{filecontents}{$(basename ${aux})}\n" > ${TEX}
+				cat "${aux}" >> ${TEX}
+				printf "\\\end{filecontents}\n" >> ${TEX}
+				cat "${TEX}.orig" >> ${TEX}
+				rm "${TEX}.orig"
+				echo "${aux}" >> .todel
+			fi
+		done
+	done
+}
+
+#grep graphicspath manuscript.tex | cut -d '{' -f '2-' | tr -d '{}/'
 
 if [ ! -n "$1" ]; then
     usage
@@ -96,6 +148,8 @@ if [ $? != 0 ] ; then
 	exit 1
 fi
 
+TEXFILES=()
+
 SAVEIFS=$IFS
 IFS=$(echo -en "\n\b")
 for TEX in $@
@@ -108,6 +162,7 @@ do
     fi
 	echo ${TEX} | grep -q \.tex
 	if [[ "$?" == 0 ]] ; then
+		TEXFILES+=($TEX)
 		echo "Finding deps for ${TEX}"
 		finddeps "${TEX}" | xargs -n 1 -I % rsync -q --relative % "${TMPDIR}"
 	    BIB=$(grep '\\bibliography' manuscript.tex | cut -d '{' -f 2 | sed 's+}+.bib+')
@@ -124,9 +179,15 @@ IFS=$SAVEIFS
 cd "${TMPDIR}"
 if [ $? == 0 ]
 then
+	cataux # Cat any aux files required to render the tex file for portability
+	catclass  # Cat the custom class file into the tex file for portability
 	echo "${LIME_YELLOW}Removing comments from *.tex${RS}"
 	printf '%s\0' *.tex | xargs -0 -n 1 sed -i.bak '/^%.*$/d'
-	rm *.out *.bak 2>/dev/null
+	checktex # Make sure the cleaned tex files are OK
+	while read todel; do
+		rm "$todel"
+	done < <(cat .todel)
+	rm *.out *.bak .todel 2>/dev/null
     if [[ $ZIP == 1 ]]; then
         echo "${POWDER_BLUE}Compressing files to ${OUTDIR}/${BASENAME}.zip${RS}"
         zip -r9 "${OUTDIR}/${BASENAME}.zip" *
