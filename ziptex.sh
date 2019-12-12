@@ -184,6 +184,7 @@ then
 	echo "${LIME_YELLOW}Removing comments from *.tex${RS}"
 	printf '%s\0' *.tex | xargs -0 -n 1 sed -i.bak '/^%.*$/d'
 	checktex # Make sure the cleaned tex files are OK
+  # Cleanup
 	while read todel; do
 		rm "$todel"
 	done < <(cat .todel)
