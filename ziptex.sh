@@ -48,15 +48,17 @@ finddeps() {
 }
 
 checktex() { # This function should only be called from $TMPDIR
+  local __texok=0
 	for TEX in ${TEXFILES[@]}; do
 		pdflatex -draft -halt-on-error "${TEX}" >/dev/null
 		if [[ $? == 0 ]]; then
 			echo "${GREEN}${TEX} is OK.${RS}"
 		else
 			echo "${RED}${TEX} is NOT OK.${RS}"
-			exit 1
+			__texok=1
 		fi
   done
+	return $__texok
 }
 
 catclass() { # This function should only be called from $TMPDIR
@@ -97,7 +99,17 @@ cataux() { # This function should only be called from $TMPDIR
 	done
 }
 
-#grep graphicspath manuscript.tex | cut -d '{' -f '2-' | tr -d '{}/'
+flattendirs() { # This function should only be called from $TMPDIR
+	for TEX in ${TEXFILES[@]}; do
+		echo "${LIME_YELLOW}Flattening directory structure for ${TEX}.${RS}"
+		find $(grep graphicspath ${TEX}| cut -d '{' -f '2-' | tr -d '{}/') \
+						-depth 1 -type f -exec mv -v "{}" ./ \;
+		sed -i.bak '/\\graphicspath.*/d' "${TEX}"
+	done
+  find ./ -type d -empty -depth -delete
+}
+
+
 
 if [ ! -n "$1" ]; then
     usage
@@ -183,17 +195,20 @@ then
 	catclass  # Cat the custom class file into the tex file for portability
 	echo "${LIME_YELLOW}Removing comments from *.tex${RS}"
 	printf '%s\0' *.tex | xargs -0 -n 1 sed -i.bak '/^%.*$/d'
+	flattendirs # Get rid of graphicspath and flatten directory structure
 	checktex # Make sure the cleaned tex files are OK
+	texok=$?
   # Cleanup
 	while read todel; do
 		rm "$todel"
 	done < <(cat .todel)
 	rm *.out *.bak .todel 2>/dev/null
-    if [[ $ZIP == 1 ]]; then
+
+    if [[ $ZIP == 1 ]] && [[ $texok == 0 ]]; then
         echo "${POWDER_BLUE}Compressing files to ${OUTDIR}/${BASENAME}.zip${RS}"
         zip -r9 "${OUTDIR}/${BASENAME}.zip" *
     fi
-    if [[ $BZ == 1 ]]; then
+    if [[ $BZ == 1 ]] && [[ $texok == 0 ]]; then
         echo "${POWDER_BLUE}Compressing files to ${OUTDIR}/${BASENAME}.tar.bz2${RS}"
         tar -cjvf "${OUTDIR}/${BASENAME}.tar.bz2" *
     fi
