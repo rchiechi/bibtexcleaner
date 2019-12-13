@@ -71,10 +71,10 @@ catclass() { # This function should only be called from $TMPDIR
 		if [[ $? == 0 ]]; then
 			echo "${LIME_YELLOW}Concatenating $(basename ${classfile}) into ${TEX} for portability.${RS}"
 			mv "${TEX}" "${TEX}.orig"
-			printf "\\\begin{filecontents}{$(basename ${classfile})}\n" > ${TEX}
-			cat "${classfile}" >> ${TEX}
-			printf "\\\end{filecontents}\n" >> ${TEX}
-			cat "${TEX}.orig" >> ${TEX}
+			printf "\\\begin{filecontents}{$(basename ${classfile})}\n" > "${TEX}"
+			cat "${classfile}" >> "${TEX}"
+			printf "\\\end{filecontents}\n" >> "${TEX}"
+			cat "${TEX}.orig" >> "${TEX}"
 			rm "${TEX}.orig"
 			[[ "$classfile" != "${CUSTOM_CLASS}" ]] && echo "$classfile" >> .todel
 		fi
@@ -84,14 +84,15 @@ catclass() { # This function should only be called from $TMPDIR
 cataux() { # This function should only be called from $TMPDIR
 	for TEX in ${TEXFILES[@]}; do
 		ls *.aux | while read aux; do
-			grep -q "${aux%.*}" ${TEX}
+			#grep -q "${aux%.*}" ${TEX}
+			egrep -q ".*?\{\s*${aux%.*}\s*\}.*?" "${TEX}"
 			if [[ $? == 0 ]]; then
 				echo "${LIME_YELLOW}Concatenating $(basename ${aux}) into ${TEX} files for portability.${RS}"
 				mv "${TEX}" "${TEX}.orig"
-				printf "\\\begin{filecontents}{$(basename ${aux})}\n" > ${TEX}
-				cat "${aux}" >> ${TEX}
-				printf "\\\end{filecontents}\n" >> ${TEX}
-				cat "${TEX}.orig" >> ${TEX}
+				printf "\\\begin{filecontents}{$(basename ${aux})}\n" > "${TEX}"
+				cat "${aux}" >> "${TEX}"
+				printf "\\\end{filecontents}\n" >> "${TEX}"
+				cat "${TEX}.orig" >> "${TEX}"
 				rm "${TEX}.orig"
 				echo "${aux}" >> .todel
 			fi
