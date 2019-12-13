@@ -42,11 +42,11 @@ desc = 'Cleanup a bibtex file before submission.'
 
 parser = argparse.ArgumentParser(description=desc,formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
-parser.add_argument('infile', type=str, nargs=1, default=[], 
+parser.add_argument('infile', type=str, nargs=1, default=[],
     help='Bibtex file to parse.')
 parser.add_argument('-r','--refresh', action='store_true', default=False,
     help="Refresh cached journal list.")
-parser.add_argument('-d','--database', type=str, 
+parser.add_argument('-d','--database', type=str,
     default = 'https://raw.githubusercontent.com/rchiechi/BibTexCleaner/master/journal_abbreviations_general.txt',
     #default='https://raw.githubusercontent.com/JabRef/reference-abbreviations/master/journals/journal_abbreviations_general.txt',
     help="Databse of journal abbreviations.")
@@ -137,6 +137,11 @@ class RecordHandler():
         if cleaned != record['title']:
             self.n_cleaned += 1
             self.clean[-1]['title'] = cleaned
+        # File entries are pointless in shared bib files
+        for key in ('file','bdsk-file-1'):
+            if key in self.clean[-1]:
+                del(self.clean[-1][key])
+
         fuzzy,score = self.__fuzzymatch(record['journal'])
         if score > 0.95:
             __abbrev = True
