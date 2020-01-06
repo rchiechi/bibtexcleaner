@@ -34,6 +34,8 @@ except ImportError as msg:
     print("Error importing package: %s" % str(msg))
     sys.exit(1)
 
+
+
 # Setup colors
 init(autoreset=True)
 
@@ -75,6 +77,41 @@ JCACHE=os.path.join(CACHEDIR,'journal_abbreviations.cache')
 
 if os.path.exists(JCACHE) and opts.refresh:
     os.remove(JCACHE)
+
+def convertmonth(month_str):
+    MONTHS_ABR={'jan':1,
+            'feb':2,
+            'mar':3,
+            'apr':4,
+            'may':5,
+            'jun':6,
+            'jul':7,
+            'aug':8,
+            'sep':9,
+            'oct':10,
+            'nov':11,
+            'dec':12}
+    MONTHS={'january':1,
+            'february':2,
+            'march':3,
+            'april':4,
+            'may':5,
+            'june':6,
+            'july':7,
+            'august':8,
+            'september':9,
+            'october':10,
+            'november':11,
+            'december':12}
+
+    try:
+        month_num = MONTHS_ABR[month_str.lower()]
+    except KeyError:
+        try:
+            month_num = MONTHS[month_str.lower()]
+        except KeyError:
+            month_num = 0
+    return str(month_num)
 
 def getCache():
     journals = {}
@@ -141,6 +178,11 @@ class RecordHandler():
         for key in ('file','bdsk-file-1'):
             if key in self.clean[-1]:
                 del(self.clean[-1][key])
+        # Non-numeric months do not sort
+        if 'month' in record:
+            if convertmonth(record['month']):
+                record['month']=convertmonth(record['month'])
+
 
         fuzzy,score = self.__fuzzymatch(record['journal'])
         if score > 0.95:
