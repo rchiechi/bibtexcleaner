@@ -182,7 +182,14 @@ class RecordHandler():
         if 'month' in record:
             if convertmonth(record['month']):
                 record['month']=convertmonth(record['month'])
-
+        # Names should be separated by 'and'; comma is to reverse name/surname order
+        if 'author' in record:
+            # print(record['author'].split(','))
+            if ' and ' not in record['author'] and ',' in record['author']:
+                authors=[]
+                for author in record['author'].split(','):
+                    authors.append('{'+author.strip()+'}')
+                record['author'] = " and ".join(authors)
 
         fuzzy,score = self.__fuzzymatch(record['journal'])
         if score > 0.95:
