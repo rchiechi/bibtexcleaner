@@ -4540,3 +4540,4 @@ Nature Chemistry = Nat. Chem.
 Nature Energy = Nat. Energ.
 Advanced Science = Adv. Sci.
 Nano Energy = Nano Energ.
+The Journal of Physical Chemistry Letters = J. Phys. Chem. Lett.
