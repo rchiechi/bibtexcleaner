@@ -104,8 +104,9 @@ flattendirs() { # This function should only be called from $TMPDIR
 	for TEX in ${TEXFILES[@]}; do
 		echo "${LIME_YELLOW}Flattening directory structure for ${TEX}.${RS}"
 		_gfxpath=$(grep graphicspath ${TEX}| cut -d '{' -f '2-' | tr -d '{}/')
-		if [[ ! -d "_gfxpath" ]]; then
-			echo "${RED} Warning: graphicspath not found (could be a case-sensitivity issue!"
+		if [[ ! -d "${_gfxpath}" ]]; then
+			ls
+			echo "${RED} Warning: graphicspath \"${_gfxpath}\" not found (could be a case-sensitivity issue!"
 		else
 			find "$_gfxpath" \
 						-depth -type f -exec mv -v "{}" ./ \;
