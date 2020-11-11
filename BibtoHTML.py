@@ -102,6 +102,10 @@ class RecordHandler():
                 if 'doi' in record[key].lower():
                     clean_doi = self.__parseDoi(record[key])
                     break
+                # For doi links with garbage characters
+                if 'rcclab.com' in record[key].lower():
+                    clean_doi = self.__parseDoi(record[key])
+                    break
 
         if clean_doi:
             clean_title = '<A href="%s" target="_blank">%s</A>' % (clean_doi,clean_title)
