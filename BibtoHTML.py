@@ -144,8 +144,12 @@ class RecordHandler():
 
     def __parseDoi(self,doilink):
         _doi = urllib.parse.urlsplit(doilink.strip())
+        if not _doi.netloc:
+            _url = "dx.doi.org"
+        else:
+            _url = _doi.netloc
         return urllib.parse.urlunsplit(['http',
-                                        _doi.netloc,
+                                        _url,
                                         _doi.path,
                                         '',''])
         #if doi[:4].lower() != 'http':
