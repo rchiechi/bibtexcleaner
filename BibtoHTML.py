@@ -10,6 +10,7 @@ import os
 import argparse
 import cgi
 import datetime
+import urllib.parse
 
 try:
     from titlecase import titlecase
@@ -102,10 +103,6 @@ class RecordHandler():
                 if 'doi' in record[key].lower():
                     clean_doi = self.__parseDoi(record[key])
                     break
-                # For doi links with garbage characters
-                if 'rcclab.com' in record[key].lower():
-                    clean_doi = self.__parseDoi(record[key])
-                    break
 
         if clean_doi:
             clean_title = '<A href="%s" target="_blank">%s</A>' % (clean_doi,clean_title)
@@ -146,11 +143,15 @@ class RecordHandler():
         return '; '.join(_authorlist)
 
     def __parseDoi(self,doilink):
-        doi = doilink.strip()
-        if doi[:4].lower() != 'http':
-            return 'http://'+doi
-        else:
-            return doi
+        _doi = urllib.parse.urlsplit(doilink.strip())
+        return urllib.parse.urlunsplit(['http',
+                                        _doi.netloc,
+                                        _doi.path,
+                                        '',''])
+        #if doi[:4].lower() != 'http':
+        #    return 'http://'+doi
+        #else:
+        #    return doi
 
     def __parseNonjournal(self,record):
         # TODO: actually parse non-journals
