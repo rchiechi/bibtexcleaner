@@ -255,10 +255,13 @@ class RecordHandler():
                     dupelist[str(n)] = bib_database.entries_dict[_d[3]]
                 print('\t\t# # #')
                 for n in dupelist:
-                    print('%s%s%s):   %s%s' % (Style.BRIGHT,Fore.YELLOW,n,Fore.CYAN,dupelist[n]['ID']))
-                    print('%sJournal: %s%s%s' %(Fore.YELLOW,Style.BRIGHT,Fore.WHITE,dupelist[n]['journal']))
-                    print('%sVolume: %s%s%s' %(Fore.YELLOW,Style.BRIGHT,Fore.WHITE,dupelist[n]['volume']))
-                    print('%sPages: %s%s%s' %(Fore.YELLOW,Style.BRIGHT,Fore.WHITE,dupelist[n]['pages']), end='\n\n')
+                    try:
+                        print('%s%s%s):   %s%s' % (Style.BRIGHT,Fore.YELLOW,n,Fore.CYAN,dupelist[n]['ID']))
+                        print('%sJournal: %s%s%s' %(Fore.YELLOW,Style.BRIGHT,Fore.WHITE,dupelist[n]['journal']))
+                        print('%sVolume: %s%s%s' %(Fore.YELLOW,Style.BRIGHT,Fore.WHITE,dupelist[n]['volume']))
+                        print('%sPages: %s%s%s' %(Fore.YELLOW,Style.BRIGHT,Fore.WHITE,dupelist[n]['pages']), end='\n\n')
+                    except KeyError as msg:
+                        print("Error parsing entry: %s" % str(msg))
                 keep = input('Keep which one?  ')
                 if keep not in dupelist:
                     print('%sKeeping all.' % (Fore.GREEN) )
