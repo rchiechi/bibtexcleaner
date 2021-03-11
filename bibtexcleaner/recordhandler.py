@@ -66,6 +66,7 @@ class RecordHandler():
         self.dedupe = []
         self.errors = []
         self.dupes = {}
+        self.history = {}
         # self.n_abbreviated = 0
         # self.n_cleaned = 0
         # self.n_parsed = 0
@@ -108,12 +109,11 @@ class RecordHandler():
                 record['author'] = " and ".join(authors)
 
         fuzzy,score = self.__fuzzymatch(record['journal'])
-        if score > 0.95:
-            print('%s%s%s%s -> %s%s%s' % (Style.BRIGHT,Fore.CYAN,record['journal'],
-                Fore.WHITE,Fore.CYAN,fuzzy,Style.RESET_ALL))
-            self.stats['n_abbreviated'] += 1
-            self.clean[-1]['journal'] = fuzzy
-            record['journal'] = fuzzy
+        if record['journal'] in self.history:
+            fuzzy = self.history[record['journal']]
+            __abbrev = fuzzy or True
+        elif score > 0.95:
+            __abbrev = True
         else:
             try:
                 _j = input('(%0.1f%%) Replace "%s%s%s" with "%s%s%s" or something else? ' % (
@@ -124,19 +124,21 @@ class RecordHandler():
                 if _j.lower() in ('y','yes'):
                     __abbrev = True
                 elif _j.lower() in ('n','no',''):
-                    pass
-                else:
+                    self.history[record['journal']] = None
+                elif _j:
                     fuzzy = _j
                     __abbrev = True
             except KeyboardInterrupt:
                 print('')
                 sys.exit()
-        # if __abbrev:
-            # print('%s%s%s%s -> %s%s%s' % (Style.BRIGHT,Fore.CYAN,record['journal'],
-            #     Fore.WHITE,Fore.CYAN,fuzzy,Style.RESET_ALL))
-            # self.stats['n_abbreviated'] += 1
-            # self.clean[-1]['journal'] = fuzzy
-            # record['journal'] = fuzzy
+
+        if __abbrev and fuzzy is not None:
+            self.history[record['journal']] = fuzzy
+            print('%s%s%s%s -> %s%s%s' % (Style.BRIGHT,Fore.CYAN,record['journal'],
+                Fore.WHITE,Fore.CYAN,fuzzy,Style.RESET_ALL))
+            self.stats['n_abbreviated'] += 1
+            self.clean[-1]['journal'] = fuzzy
+            record['journal'] = fuzzy
         try:
             _p = self.clean[-1]['pages'].split('-')[0]
         except ValueError:
