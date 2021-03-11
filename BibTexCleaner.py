@@ -7,16 +7,11 @@ import shutil
 import argparse
 import bibtexcleaner
 from bibtexcleaner.recordhandler import RecordHandler
-#The pip version of bibtexparser has a showstopping bug in it
-#so I copied it to BibTexCleaner for now
-from bibtexcleaner import bibtexparser
-from bibtexcleaner.bibtexparser.bparser import BibTexParser
-from bibtexcleaner.bibtexparser.bwriter import BibTexWriter
 
 try:
-    # import bibtexparser
-    # from bibtexparser.bparser import BibTexParser
-    # from bibtexparser.bwriter import BibTexWriter
+    import bibtexparser
+    from bibtexparser.bparser import BibTexParser
+    from bibtexparser.bwriter import BibTexWriter
     from colorama import init,Fore,Style
 
 except ImportError as msg:
