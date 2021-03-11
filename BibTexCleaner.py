@@ -76,9 +76,10 @@ print("%sRead %s journals." % (Fore.BLUE,len(journals.keys())) )
 
 
 print('%s # # # # %s\n' % (Style.BRIGHT,Style.RESET_ALL) )
-bibparser = BibTexParser(common_strings=True)
 records = RecordHandler(journals)
-bibparser.customization = records.handle_record
+bibparser = BibTexParser(common_strings=True,
+                         customization=records.handle_record )
+
 with open(BIBFILE) as fh:
     bib_database = bibtexparser.load(fh, parser=bibparser)
     records.add(bib_database)

@@ -57,7 +57,7 @@ def convertmonth(month_str):
 class RecordHandler():
     '''Handle BibTex Records for the cleaner'''
 
-    recordkeys = ('ENTRYTYPE','ID','title','journal','pages','volume')
+    recordkeys = ('ENTRYTYPE','ID','title','journal')
 
     def __init__(self, _journals):
         self.journals = _journals
@@ -79,22 +79,24 @@ class RecordHandler():
         self.bib_database = bib_database
 
     def handle_record(self,record):
-        '''Main record handling method'''
-        self.clean.append(record)
+        '''Main record handling method that gets called when bibtexparser adds an entry'''
         for key in RecordHandler.recordkeys:
             if key not in record: # and record['ENTRYTYPE'] == 'journal':
-                self.errors.append(record)
                 print('%sCannot parse %s' % (Fore.RED,record['ENTRYTYPE']))
+                self.errors.append(record)
+                self.clean.append(record)
                 return record
-        __abbrev = False
-        cleaned = titlecase(record['title'])
-        if cleaned != record['title']:
+        for _key in ('pages', 'volume'):
+            if _key not in record:
+                record[_key] = ''
+        cleantitle = titlecase(record['title'])
+        if cleantitle != record['title']:
             self.stats['n_cleaned'] += 1
-            self.clean[-1]['title'] = cleaned
+            record['title'] = cleantitle
         # File entries are pointless in shared bib files
         for key in ('file','bdsk-file-1'):
-            if key in self.clean[-1]:
-                del self.clean[-1][key]
+            if key in record:
+                del record[key]
         # Non-numeric months do not sort
         if 'month' in record:
             if convertmonth(record['month']):
@@ -107,8 +109,12 @@ class RecordHandler():
                 for author in record['author'].split(','):
                     authors.append('{'+author.strip()+'}')
                 record['author'] = " and ".join(authors)
+        return self.__getuserinput(record)
 
+    def __getuserinput(self, record):
+        '''Determine if we need to ask the user for input and then do it.'''
         fuzzy,score = self.__fuzzymatch(record['journal'])
+        __abbrev = False
         if record['journal'] in self.history:
             fuzzy = self.history[record['journal']]
             __abbrev = bool(fuzzy)
@@ -132,22 +138,24 @@ class RecordHandler():
                 print('')
                 sys.exit()
 
-        if __abbrev:
+        if __abbrev and not record['journal'] == fuzzy:
             self.history[record['journal']] = fuzzy
             print('%s%s%s%s -> %s%s%s' % (Style.BRIGHT,Fore.CYAN,record['journal'],
                 Fore.WHITE,Fore.CYAN,fuzzy,Style.RESET_ALL))
             self.stats['n_abbreviated'] += 1
-            self.clean[-1]['journal'] = fuzzy
+            # self.clean[-1]['journal'] = fuzzy
             record['journal'] = fuzzy
         try:
-            _p = self.clean[-1]['pages'].split('-')[0]
+            _p = record['pages'].split('-')[0]
         except ValueError:
-            _p = self.clean[-1]['pages']
-        _j, _v, _c = self.clean[-1]['journal'],self.clean[-1]['volume'],self.clean[-1]['ID']
-        self.dedupe.append( (_p, _v, _j, _c) )
+            _p = record['pages']
+        _j, _v, _c = record['journal'], record['volume'], record['ID']
+        if _p and _v:
+            self.dedupe.append( (_p, _v, _j, _c) )
         record['journal'] = string_to_latex(record['journal'])
         record = page_double_hyphen(record)
         self.stats['n_parsed'] += 1
+        self.clean.append(record)
         return record
 
     def __fuzzymatch(self,journal):
@@ -161,6 +169,25 @@ class RecordHandler():
             if _b > i[1]:
                 i = [self.journals[key],_b]
         return i
+
+
+    def printstats(self):
+        '''Print stats in pretty colors'''
+        print('%s%sParsed: %s\n%sCleaned: %s\n%sAbbreviated: %s\n%sDupes: %s\n%sFailed:%s%s' % \
+                (Style.BRIGHT,Fore.GREEN,self.stats['n_parsed'],Fore.YELLOW,
+                    self.stats['n_cleaned'],Fore.MAGENTA,self.stats['n_abbreviated'],
+                    Fore.CYAN,len(self.dupes),Fore.RED,len(self.errors),Style.RESET_ALL))
+        if self.errors:
+            print('\nEntries that produced errors:\n')
+            #print(self.errors)
+            for err in self.errors:
+                print('* * * * * * * * * * * * * * * *')
+                for key in RecordHandler.recordkeys:
+                    if key not in err:
+                        print('%s%s%s: -' % (Fore.RED,titlecase(key),Style.RESET_ALL))
+                    else:
+                        print('%s: %s%s' % (titlecase(key),Style.BRIGHT,err[key]))
+
 
     def dodupecheck(self):
         '''Check for duplicate bibtex entries'''
@@ -210,20 +237,3 @@ class RecordHandler():
                                 Style.RESET_ALL,Style.BRIGHT,Fore.RED,self.clean[i]['ID']))
                             del self.clean[i]
                             break
-
-    def printstats(self):
-        '''Print stats in pretty colors'''
-        print('%s%sParsed: %s\n%sCleaned: %s\n%sAbbreviated: %s\n%sDupes: %s\n%sFailed:%s%s' % \
-                (Style.BRIGHT,Fore.GREEN,self.stats['n_parsed'],Fore.YELLOW,
-                    self.stats['n_cleaned'],Fore.MAGENTA,self.stats['n_abbreviated'],
-                    Fore.CYAN,len(self.dupes),Fore.RED,len(self.errors),Style.RESET_ALL))
-        if self.errors:
-            print('\nEntries that produced errors:\n')
-            #print(self.errors)
-            for err in self.errors:
-                print('* * * * * * * * * * * * * * * *')
-                for key in RecordHandler.recordkeys:
-                    if key not in err:
-                        print('%s%s%s: -' % (Fore.RED,titlecase(key),Style.RESET_ALL))
-                    else:
-                        print('%s: %s%s' % (titlecase(key),Style.BRIGHT,err[key]))
