@@ -111,7 +111,7 @@ class RecordHandler():
         fuzzy,score = self.__fuzzymatch(record['journal'])
         if record['journal'] in self.history:
             fuzzy = self.history[record['journal']]
-            __abbrev = fuzzy or True
+            __abbrev = bool(fuzzy)
         elif score > 0.95:
             __abbrev = True
         else:
@@ -132,7 +132,7 @@ class RecordHandler():
                 print('')
                 sys.exit()
 
-        if __abbrev and fuzzy is not None:
+        if __abbrev:
             self.history[record['journal']] = fuzzy
             print('%s%s%s%s -> %s%s%s' % (Style.BRIGHT,Fore.CYAN,record['journal'],
                 Fore.WHITE,Fore.CYAN,fuzzy,Style.RESET_ALL))
