@@ -5,8 +5,8 @@ import sys
 import os
 import shutil
 import argparse
-import bibtexcleaner
-from bibtexcleaner.recordhandler import RecordHandler
+import btcleaner
+from btcleaner.recordhandler import RecordHandler
 
 try:
     import bibtexparser
@@ -17,8 +17,6 @@ try:
 except ImportError as msg:
     print("Error importing package: %s" % str(msg))
     sys.exit(1)
-
-
 
 # Setup colors
 init(autoreset=True)
@@ -34,7 +32,7 @@ parser.add_argument('infile', type=str, nargs=1, default=[],
 parser.add_argument('-r','--refresh', action='store_true', default=False,
     help="Refresh cached journal list.")
 parser.add_argument('-d','--database', type=str,
-    #default = 'https://raw.githubusercontent.com/rchiechi/BibTexCleaner/master/journal_abbreviations_general.txt', #pylint: disable=C0301
+    #default = 'https://raw.githubusercontent.com/rchiechi/btcleaner/master/journal_abbreviations_general.txt', #pylint: disable=C0301
     default='https://raw.githubusercontent.com/JabRef/'\
         +'abbrv.jabref.org/master/journals/journal_abbreviations_acs.csv',
     help="Databse of journal abbreviations.")
@@ -59,11 +57,11 @@ shutil.copy2(BIBFILE,BIBFILE+'.bak')
 
 #TODO this should be more like a merge function
 if opts.refresh:
-    bibtexcleaner.refresh()
+    btcleaner.refresh()
 # Parse journal abbreviations from cache or remote
-journals = bibtexcleaner.load(opts.database, opts.custom)
+journals = btcleaner.load(opts.database, opts.custom)
 # Save the cache to dist (with custom abbreviations)
-bibtexcleaner.save(journals)
+btcleaner.save(journals)
 
 print("%sRead %s journals." % (Fore.BLUE,len(journals.keys())) )
 
@@ -77,10 +75,10 @@ with open(BIBFILE) as fh:
 print('\n%s # # # # %s' % (Style.BRIGHT,Style.RESET_ALL) )
 
 # Dedupe entries in cleaned database
-bib_database.entries = bibtexcleaner.dedupe_database(bib_database)
+bib_database.entries = btcleaner.dedupe_database(bib_database)
 unique = records.getcustom()
 if unique:
-    bibtexcleaner.save(bibtexcleaner.load(opts.database, unique))
+    btcleaner.save(btcleaner.load(opts.database, unique))
 
 records.printstats()
 
