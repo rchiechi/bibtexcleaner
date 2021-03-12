@@ -16,6 +16,6 @@ def load(database, _custom=None):
         _journals = cache.getcache(database, _custom)
     return _journals
 
-def save(_journals, _custom=None):
+def save(_journals):
     '''Call putcache from cache'''
-    cache.putcache(_journals, _custom)
+    cache.putcache(_journals)

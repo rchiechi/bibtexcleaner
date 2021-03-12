@@ -21,16 +21,19 @@ if 'APPDATA' in os.environ:
 else:
     CACHEDIR = os.path.join(
         os.path.expanduser('~'), '.cache')
+
 if not os.path.exists(CACHEDIR):
     try:
+        # Create it if it doesn't exist
         os.makedirs(CACHEDIR)
     except OSError as msg:
+        # Fall back to global tempdir
         CACHEDIR = tempfile.gettempdir()
 JCACHE=os.path.join(CACHEDIR,'journal_abbreviations.cache')
 
 
 def refreshcache():
-    '''Delete the ondisk cache'''
+    '''Delete the disk cache'''
     if os.path.exists(JCACHE):
         os.remove(JCACHE)
 
@@ -57,10 +60,8 @@ def getcache(database, _custom=None):
         journals.update(__parseabbreviations(_custom))
     return journals
 
-def putcache(journals, custom=None):
+def putcache(journals):
     '''Save cache to disk'''
-    if custom is not None:
-        journals += custom
     try:
         pickle.dump(journals,open(JCACHE,'wb'))
         print('%sSaved cache to %s' % (Fore.YELLOW,JCACHE))

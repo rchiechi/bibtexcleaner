@@ -64,14 +64,10 @@ shutil.copy2(BIBFILE,BIBFILE+'.bak')
 if opts.refresh:
     bibtexcleaner.refresh()
 
-_custom = []
-for _c in opts.custom:
-    if len(_c.split(';')) == 2:
-        _custom.append(_c)
-# Parse journal abbreviations
-journals = bibtexcleaner.load(opts.database, _custom)
-# Update cache
-bibtexcleaner.save(journals, _custom)
+# Parse journal abbreviations from cache or remote
+journals = bibtexcleaner.load(opts.database, opts.custom)
+# Save the cache to dist (with custom abbreviations)
+bibtexcleaner.save(journals)
 
 print("%sRead %s journals." % (Fore.BLUE,len(journals.keys())) )
 
