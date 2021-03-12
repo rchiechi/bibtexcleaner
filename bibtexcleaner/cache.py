@@ -14,7 +14,18 @@ except ImportError as msg:
 # Setup colors
 init(autoreset=True)
 
-CACHEDIR = tempfile.gettempdir()
+# Setup cache dir
+if 'APPDATA' in os.environ:
+    CACHEDIR = os.path.join(
+        os.getenv('APPDATA'), 'BibTexCleaner')
+else:
+    CACHEDIR = os.path.join(
+        os.path.expanduser('~'), '.cache')
+if not os.path.exists(CACHEDIR):
+    try:
+        os.makedirs(CACHEDIR)
+    except OSError as msg:
+        CACHEDIR = tempfile.gettempdir()
 JCACHE=os.path.join(CACHEDIR,'journal_abbreviations.cache')
 
 
