@@ -64,21 +64,11 @@ class RecordHandler():
     def __init__(self, _journals):
         self.journals = _journals
         self.bib_database = None
-        self.clean = []
-        # self.dedupe = []
         self.errors = []
-        # self.dupes = {}
         self.history = {}
-        # self.n_abbreviated = 0
-        # self.n_cleaned = 0
-        # self.n_parsed = 0
         self.stats = {'n_cleaned':0,
                       'n_parsed':0,
                       'n_abbreviated':0}
-
-    # def add(self, bib_database):
-    #     '''Add a bibtexparser database for later deduping'''
-    #     self.bib_database = bib_database
 
     def handle_record(self,record):
         '''Main record handling method that gets called when bibtexparser adds an entry'''
@@ -86,7 +76,7 @@ class RecordHandler():
             if key not in record: # and record['ENTRYTYPE'] == 'journal':
                 print('%sCannot parse %s' % (Fore.RED,record['ENTRYTYPE']))
                 self.errors.append(record)
-                self.clean.append(record)
+                # self.clean.append(record)
                 return record
         for _key in ('pages', 'volume'):
             if _key not in record:
@@ -145,19 +135,10 @@ class RecordHandler():
             print('%s%s%s%s -> %s%s%s' % (Style.BRIGHT,Fore.CYAN,record['journal'],
                 Fore.WHITE,Fore.CYAN,fuzzy,Style.RESET_ALL))
             self.stats['n_abbreviated'] += 1
-            # self.clean[-1]['journal'] = fuzzy
             record['journal'] = fuzzy
-        # try:
-        #     _p = record['pages'].split('-')[0]
-        # except ValueError:
-        #     _p = record['pages']
-        # _j, _v, _c = record['journal'], record['volume'], record['ID']
-        # if _p and _v:
-        #     self.dedupe.append( (_p, _v, _j, _c) )
         record['journal'] = string_to_latex(record['journal'])
         record = page_double_hyphen(record)
         self.stats['n_parsed'] += 1
-        self.clean.append(record)
         return record
 
     def __fuzzymatch(self,journal):
@@ -171,6 +152,19 @@ class RecordHandler():
             if _b > i[1]:
                 i = [self.journals[key],_b]
         return i
+
+    def getcustom(self):
+        '''Return any custom journal abbreviations entered during handle_record'''
+        unique = []
+        for key in self.history:
+            if self.history[key] is None:
+                continue
+            if key not in self.journals:
+                unique.append(";".join([key, self.history[key]]))
+                print("%sCaching %s%s ==> %s" % (
+                    Style.BRIGHT+Fore.CYAN, Fore.WHITE,
+                    key, self.history[key]))
+        return unique
 
     def printstats(self):
         '''Print stats in pretty colors'''

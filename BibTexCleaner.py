@@ -22,7 +22,6 @@ except ImportError as msg:
 
 # Setup colors
 init(autoreset=True)
-# prog = os.path.basename(sys.argv[0]).replace('.py','')
 
 # Parse args
 DESC = 'Cleanup a bibtex file before submission.'
@@ -58,9 +57,7 @@ print('%sBacking %s up to %s' %\
     (Fore.YELLOW,os.path.basename(BIBFILE),os.path.basename(BIBFILE)+'.bak'))
 shutil.copy2(BIBFILE,BIBFILE+'.bak')
 
-# Use a cache file so we do not have to fetch the abbreviations on each run
-# JCACHE=os.path.join(CACHEDIR,'journal_abbreviations.cache')
-
+#TODO this should be more like a merge function
 if opts.refresh:
     bibtexcleaner.refresh()
 # Parse journal abbreviations from cache or remote
@@ -70,22 +67,20 @@ bibtexcleaner.save(journals)
 
 print("%sRead %s journals." % (Fore.BLUE,len(journals.keys())) )
 
-
-
 print('%s # # # # %s\n' % (Style.BRIGHT,Style.RESET_ALL) )
 records = RecordHandler(journals)
 bibparser = BibTexParser(common_strings=True,
                          customization=records.handle_record )
-
 with open(BIBFILE) as fh:
     bib_database = bibtexparser.load(fh, parser=bibparser)
-    # records.add(bib_database)
 
 print('\n%s # # # # %s' % (Style.BRIGHT,Style.RESET_ALL) )
-# records.dodupecheck()
-# Replace entries in database with cleaned versions
-# bib_database.entries = records.clean
+
+# Dedupe entries in cleaned database
 bib_database.entries = bibtexcleaner.dedupe_database(bib_database)
+unique = records.getcustom()
+if unique:
+    bibtexcleaner.save(bibtexcleaner.load(opts.database, unique))
 writer = BibTexWriter()
 # Overwrite original BibTex file
 with open(BIBFILE, 'w') as bibfile:
