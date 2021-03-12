@@ -81,8 +81,26 @@ bib_database.entries = bibtexcleaner.dedupe_database(bib_database)
 unique = records.getcustom()
 if unique:
     bibtexcleaner.save(bibtexcleaner.load(opts.database, unique))
+
+try:
+    while True:
+        _l = input('%sSave changes to %s%s%s? %s(y/n): ' % (
+            Style.BRIGHT+Fore.WHITE,
+            Fore.YELLOW, BIBFILE, Fore.WHITE,
+            Style.RESET_ALL))
+        if _l.lower() in ('y', 'yes'):
+            break
+        if _l.lower() in ('n', 'no'):
+            print('%sNot saving changes.%s' % (
+                Style.BRIGHT+Fore.MAGENTA,Style.RESET_ALL))
+            sys.exit()
+except KeyboardInterrupt:
+    sys.exit()
+
 writer = BibTexWriter()
 # Overwrite original BibTex file
 with open(BIBFILE, 'w') as bibfile:
+    print('%sSaving changes to %s' % (
+        Style.BRIGHT+Fore.MAGENTA,BIBFILE))
     bibfile.write(writer.write(bib_database))
 records.printstats()
