@@ -45,15 +45,12 @@ def dodedupe(bib_database, dupes):
     clean = bib_database.entries
     for _id in dupes:
         # dupe is a tuple (pages, volume, journal, ID)
-        # dupe = dupes[_id]
-        # i = 1
-        # dupelist = { str(i):bib_database.entries_dict[_id]  }
-        # for _d in dupe:
-        #     i += 1
-        #     dupelist[str(i)] = bib_database.entries_dict[_d[3]]
-        dupelist = {}
-        for _enum in enumerate(bib_database.entries):
-            dupelist[str(_enum[0])] = _enum[1]
+        dupe = dupes[_id]
+        i = 1
+        dupelist = { str(i):bib_database.entries_dict[_id]  }
+        for _d in dupe:
+            i += 1
+            dupelist[str(i)] = bib_database.entries_dict[_d[3]]
         print('\t\t# # #')
         for _n in dupelist:
             try:

@@ -63,7 +63,6 @@ shutil.copy2(BIBFILE,BIBFILE+'.bak')
 
 if opts.refresh:
     bibtexcleaner.refresh()
-
 # Parse journal abbreviations from cache or remote
 journals = bibtexcleaner.load(opts.database, opts.custom)
 # Save the cache to dist (with custom abbreviations)

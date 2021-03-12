@@ -10,7 +10,7 @@ def refresh():
 
 def load(database, _custom=None):
     '''Call getcache function from cache and refresh if there is an error.'''
-    _journals = cache.getcache(database, _custom=None)
+    _journals = cache.getcache(database, _custom)
     if not _journals:
         refresh()
         _journals = cache.getcache(database, _custom)

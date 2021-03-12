@@ -6,7 +6,7 @@ import pickle
 
 try:
     import requests
-    from colorama import init,Fore
+    from colorama import init,Fore,Style
 except ImportError as msg:
     print("Error importing package: %s" % str(msg))
     sys.exit(1)
@@ -56,7 +56,7 @@ def getcache(database, _custom=None):
         except OSError:
             print('%sError loading cache from %s.' % (Fore.RED,JCACHE))
             return {}
-    if isinstance(_custom, dict):
+    if _custom is not None:
         journals.update(__parseabbreviations(_custom))
     return journals
 
@@ -83,4 +83,6 @@ def __parseabbreviations(jlines):
         journals[_t.strip()] = _a.strip()
         if len(_t.split('(')) > 1:
             journals[_t.split('(')[0].strip()] = _a.split('(')[0].strip()
+        print("%sAdding custom journal %s%s => %s" % (
+                Style.BRIGHT+Fore.CYAN, Fore.WHITE, _t, _a))
     return journals
