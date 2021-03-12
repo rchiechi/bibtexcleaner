@@ -18,12 +18,15 @@ def dodupecheck(bib_database):
     dupes = {}
     for record in bib_database.entries:
         try:
-            _p = record['pages'].split('-')[0]
-        except ValueError:
-            _p = record['pages']
-        _j, _v, _id = record['journal'], record['volume'], record['ID']
-        if _p and _v:
-            dedupe.append( (_p, _v, _j, _id) )
+            if '-' in record['pages']:
+                _p = record['pages'].split('-')[0].strip().strip('-')
+            else:
+                _p = record['pages']
+            _j, _v, _id = record['journal'], record['volume'], record['ID']
+            if _p and _v:
+                dedupe.append( (_p, _v, _j, _id) )
+        except KeyError:
+            continue
     while dedupe:
         # Pop a dedupe tuple off the list
         _e = dedupe.pop()
