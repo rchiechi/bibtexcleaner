@@ -82,6 +82,8 @@ unique = records.getcustom()
 if unique:
     bibtexcleaner.save(bibtexcleaner.load(opts.database, unique))
 
+records.printstats()
+
 try:
     while True:
         _l = input('%sSave changes to %s%s%s? %s(y/n): ' % (
@@ -101,6 +103,5 @@ writer = BibTexWriter()
 # Overwrite original BibTex file
 with open(BIBFILE, 'w') as bibfile:
     print('%sSaving changes to %s' % (
-        Style.BRIGHT+Fore.MAGENTA,BIBFILE))
+        Style.BRIGHT+Fore.GREEN,BIBFILE))
     bibfile.write(writer.write(bib_database))
-records.printstats()
