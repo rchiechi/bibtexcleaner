@@ -46,8 +46,10 @@ def getcache(database, _custom=None):
         journals.update(__parseabbreviations(_custom))
     return journals
 
-def putcache(journals):
+def putcache(journals, custom=None):
     '''Save cache to disk'''
+    if custom is not None:
+        journals += custom
     try:
         pickle.dump(journals,open(JCACHE,'wb'))
         print('%sSaved cache to %s' % (Fore.YELLOW,JCACHE))
