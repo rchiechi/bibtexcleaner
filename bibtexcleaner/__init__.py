@@ -1,8 +1,8 @@
 '''Classes and functions for handling caching and parsing of bibtexentries'''
 
-__all__ = ['refresh', 'load', 'save']
+__all__ = ['refresh', 'load', 'save', 'dedupe_database']
 
-from . import cache, recordhandler
+from . import cache, dedupe
 
 def refresh():
     '''Call refershcache function from cache'''
@@ -19,3 +19,7 @@ def load(database, _custom=None):
 def save(_journals):
     '''Call putcache from cache'''
     cache.putcache(_journals)
+
+def dedupe_database(bib_database):
+    '''Call the dedupecheck funnction'''
+    return dedupe.dodupecheck(bib_database)

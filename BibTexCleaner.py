@@ -80,12 +80,13 @@ bibparser = BibTexParser(common_strings=True,
 
 with open(BIBFILE) as fh:
     bib_database = bibtexparser.load(fh, parser=bibparser)
-    records.add(bib_database)
+    # records.add(bib_database)
 
 print('\n%s # # # # %s' % (Style.BRIGHT,Style.RESET_ALL) )
-records.dodupecheck()
+# records.dodupecheck()
 # Replace entries in database with cleaned versions
-bib_database.entries = records.clean
+# bib_database.entries = records.clean
+bib_database.entries = bibtexcleaner.dedupe_database(bib_database)
 writer = BibTexWriter()
 # Overwrite original BibTex file
 with open(BIBFILE, 'w') as bibfile:
