@@ -6,7 +6,6 @@ import os
 import shutil
 import argparse
 import btcleaner
-from btcleaner.recordhandler import RecordHandler
 
 try:
     import bibtexparser
@@ -66,7 +65,7 @@ btcleaner.save(journals)
 print("%sRead %s journals." % (Fore.BLUE,len(journals.keys())) )
 
 print('%s # # # # %s\n' % (Style.BRIGHT,Style.RESET_ALL) )
-records = RecordHandler(journals)
+records = btcleaner.getrecordhandler(journals)
 bibparser = BibTexParser(common_strings=True,
                          customization=records.handle_record )
 with open(BIBFILE) as fh:

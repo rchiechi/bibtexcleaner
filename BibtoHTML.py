@@ -1,14 +1,14 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Thu Feb 28 06:12:19 2019
-
-@author: rchiechi
+A script to format a bibtex database as a simple
+list of publications in HTML, e.g., for your
+group website or CV.
 """
 import sys
 import os
 import argparse
-import cgi
+# import cgi
 import datetime
 import urllib.parse
 
@@ -16,12 +16,12 @@ try:
     from titlecase import titlecase
     import bibtexparser
     from bibtexparser.bparser import BibTexParser
-    from bibtexparser.bwriter import BibTexWriter
-    from bibtexparser.bibdatabase import BibDatabase
-    from bibtexparser.customization import page_double_hyphen
-    from bibtexparser.latexenc import string_to_latex
+    # from bibtexparser.bwriter import BibTexWriter
+    # from bibtexparser.bibdatabase import BibDatabase
+    # from bibtexparser.customization import page_double_hyphen
+    # from bibtexparser.latexenc import string_to_latex
     import colorama as cm
-    import latexcodec
+    # import latexcodec
 
 except ImportError as msg:
     print("Error importing package: %s" % str(msg))

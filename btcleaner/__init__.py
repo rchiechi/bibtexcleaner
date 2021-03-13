@@ -2,7 +2,7 @@
 
 __all__ = ['refresh', 'load', 'save', 'dedupe_database']
 
-from . import cache, dedupe
+from . import cache, dedupe, recordhandler
 
 def refresh():
     '''Call refershcache function from cache'''
@@ -23,3 +23,7 @@ def save(_journals):
 def dedupe_database(bib_database):
     '''Call the dedupecheck funnction'''
     return dedupe.dodupecheck(bib_database)
+
+def getrecordhandler(journals):
+    '''Return a RecordHandler instance'''
+    return recordhandler.RecordHandler(journals)
