@@ -1,5 +1,9 @@
 '''Classes and functions for handling caching and parsing of bibtexentries'''
 
+__version__ = "0.1"
+__author__ = 'Ryan C. Chiechi'
+__credits__ = 'University of Groningen'
+
 __all__ = ['refresh', 'load', 'save', 'dedupe_database']
 
 from . import cache, dedupe, recordhandler

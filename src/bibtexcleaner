@@ -5,13 +5,13 @@ import sys
 import os
 import shutil
 import argparse
-import btcleaner
+import btcleaner  #pylint: disable=E0401
 
 try:
     import bibtexparser
     from bibtexparser.bparser import BibTexParser
     from bibtexparser.bwriter import BibTexWriter
-    from colorama import init,Fore,Style
+    from colorama import init,Fore,Back,Style
 
 except ImportError as msg:
     print("Error importing package: %s" % str(msg))
@@ -84,8 +84,8 @@ records.printstats()
 try:
     while True:
         _l = input('%sSave changes to %s%s%s? %s(y/n): ' % (
-            Style.BRIGHT+Fore.WHITE,
-            Fore.YELLOW, BIBFILE, Fore.WHITE,
+            Style.BRIGHT+Fore.WHITE+Back.BLACK,
+            Fore.YELLOW, BIBFILE, Fore.WHITE+Back.BLACK,
             Style.RESET_ALL))
         if _l.lower() in ('y', 'yes'):
             break
