@@ -21,7 +21,7 @@ try:
     # from bibtexparser.customization import page_double_hyphen
     # from bibtexparser.latexenc import string_to_latex
     import colorama as cm
-    # import latexcodec
+    import latexcodec #pylint: disable=unused-import
 
 except ImportError as msg:
     print("Error importing package: %s" % str(msg))
@@ -35,8 +35,8 @@ class RecordHandler():
 
     recordkeys = ('ID','author','title','journal','pages','volume','year')
     doikeys = ('doi', 'eprint', 'note', 'bdsk-url-1', 'uri', 'bdsk-url-2', 'bdsk-url-3')
-    def __init__(self,opts):
-        self.opts = opts
+    def __init__(self,_opts):
+        self.opts = _opts
         if self.opts.strong:
             self.bold=('<strong>','</strong>')
         else:
@@ -168,7 +168,9 @@ class RecordHandler():
 # Parse args
 desc = 'Cleanup a bibtex file before submission.'
 
-parser = argparse.ArgumentParser(description=desc,formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+parser = argparse.ArgumentParser(
+    description=desc,
+    formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
 parser.add_argument('infile', type=str, nargs=1, default=[],
     help='Bibtex file to parse.')
