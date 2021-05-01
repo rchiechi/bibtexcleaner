@@ -39,17 +39,31 @@ class RecordHandler():
         self.opts = _opts
         if self.opts.strong:
             self.bold=('<strong>','</strong>')
+        elif self.opts.span:
+            self.bold=('<span class="c3">','</span>')
         else:
             self.bold=('<b>','</b>')
         if self.opts.em:
             self.italics=('<em>','</em>')
+        elif self.opts.span:
+            self.italics=('<span class="c1">','</span>')
         else:
             self.italics=('<i>','</i>')
-        self.heading=('<h2>','</h2>')
+        if self.opts.span:
+            self.normal=('<span class="c2">','</span>')
+        else:
+            self.normal=('','')
+        if self.opts.span:
+            self.heading=('<h3>','</h3>')
+        else:
+            self.heading=self.bold
 
         self.formatted = {'journals':{},'books':{},'patents':{}}
 
-
+#<p>Wan, W. Brad; Chiechi, Ryan C; Weakley, T.J.R.; Haley, M.M. <A href="http://doi.org/10.1002/1099-0690(200109)2001:18%3C3485::AID-EJOC3485%3E3.0.CO;2-I" target="_blank">Synthesis and Spectroscopic Studies of Expanded Planar Dehydrotribenzo[n]annulenes Containing One or Two Isolated Alkene Units</A>. <i>Eur. J. Org. Chem.</i> <b>2001</b>, <i>2001</i>, 3485-3490</p></li><li><p>Bell, M.L.; Chiechi, Ryan C; Johnson, C.A.; Kimball, D.B.; Matzger, A.J.; Wan, W. Brad; Weakley, T.J.R.; Haley, M.M. <A href="http://dx.doi.org/10.1016/S0040-4020(01)00229-0" target="_blank">A Versatile Synthetic Route to Dehydrobenzoannulenes via in Situ Generation of Reactive Alkynes</A>. <i>Tetrahedron</i> <b>2001</b>, <i>57</i>, 3507-3520</p>
+# <h3>2018</h3>
+# <p class="c2"><span>Jia, C.; Famili, M.; Carlotti, M.; Liu, Y.; Wang, P.; Grace, I. M.; Feng, Z.; Wang, Y.; Zhao, Z.; Ding, M.; Xu, X.; Wang, C.; Lee, S.-J.; Huang, Y.; Chiechi, R. C.; Lambert, C. J.; Duan, X. 
+# </span><span class="c1">Sci. Adv.</span><span>&nbsp;</span><span class="c3">2018</span><span>, </span><span class="c1">4</span><span class="c0">&nbsp;(10), eaat8237.</span></p><br>
     def outputHTML(self):
         html=[]
         years = list(self.formatted['journals'].keys())
@@ -57,7 +71,7 @@ class RecordHandler():
 
         html.append('<ol>')
         for _year in years:
-            html.append('%s%s%s' % (self.bold[0],_year,self.bold[1]))
+            html.append('%s%s%s' % (self.heading[0],_year,self.heading[1]))
             for _pub in self.formatted['journals'][_year]:
                 html.append('<li>')
                 html.append('<p>%s</p>' % _pub)
@@ -68,6 +82,25 @@ class RecordHandler():
             return '\n'.join(html)
         else:
             return ''.join(html)
+
+    # def outputFancyHTML(self):
+    #     html=[]
+    #     years = list(self.formatted['journals'].keys())
+    #     years.sort(reverse=True)
+
+    #     html.append('<ol>')
+    #     for _year in years:
+    #         html.append('<h3>%s</h3>' % _year)
+    #         for _pub in self.formatted['journals'][_year]:
+    #             html.append('<li>')
+    #             html.append('<p>%s</p>' % _pub)
+    #             html.append('</li>')
+    #     html.append('</ol>')
+
+    #     if self.opts.linebreaks:
+    #         return '\n'.join(html)
+    #     else:
+    #         return ''.join(html)
 
     def handle_record(self,record):
         _formatted = str()
@@ -140,7 +173,7 @@ class RecordHandler():
             if opts.boldname and (opts.boldname in _s):
                 _s = '%s%s%s' % (self.bold[0],_s,self.bold[1])
             _authorlist.append(_s)
-        return '; '.join(_authorlist)
+        return "%s%s%s" % (self.normal[0], '; '.join(_authorlist), self.normal[1])
 
     def __parseDoi(self,doilink):
         _doi = urllib.parse.urlsplit(doilink.strip())
@@ -166,7 +199,7 @@ class RecordHandler():
             self.formatted['books']['2018'].append(record)
 
 # Parse args
-desc = 'Cleanup a bibtex file before submission.'
+desc = 'Convert a BibTeX database to HTML.'
 
 parser = argparse.ArgumentParser(
     description=desc,
@@ -180,6 +213,8 @@ parser.add_argument('--strong', action="store_true", default=False,
     help='Use <strong> instead of <b>')
 parser.add_argument('--em', action="store_true", default=False,
     help='Use <em> instead of <i>')
+parser.add_argument('--span', action="store_true", default=False,
+    help='Use <span> instead of <i>, <br>, etc.')
 parser.add_argument('--linebreaks', action="store_true", default=False,
     help='Use linebreaks in HTML output.')
 parser.add_argument('-o', '--out', type=str, default='',
