@@ -229,7 +229,7 @@ elif not os.path.exists(opts.infile[0]):
 
 
 BIBFILE=os.path.abspath(opts.infile[0])
-parser = BibTexParser()
+parser = BibTexParser(common_strings=True)
 records = RecordHandler(opts)
 parser.customization = records.handle_record
 print('%s # # # # %s\n' % (cm.Style.BRIGHT,cm.Style.RESET_ALL) )
